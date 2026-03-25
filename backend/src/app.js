@@ -1,19 +1,16 @@
-const express = require("express");
-const cors = require("cors");
-const contactsRoutes = require("./routes/contacts.routes");
+import express from "express";
+import cors from "cors";
+import contactsRoutes from "./routes/contacts.routes.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    message: "Backend funcionando"
-  });
+app.get("/", (req, res) => {
+  res.json({ ok: true, message: "API funcionando" });
 });
 
 app.use("/api/contacts", contactsRoutes);
 
-module.exports = app;
+export default app;
