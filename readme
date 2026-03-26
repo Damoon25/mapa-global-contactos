@@ -1,0 +1,160 @@
+🌍 Mapa Global de Contactos
+
+Aplicación web interactiva para visualizar, gestionar y buscar contactos a nivel global sobre un mapa.
+
+🚀 Estado actual del proyecto
+✅ Funcionalidades implementadas
+🗺️ Mapa interactivo
+Implementado con Leaflet + React Leaflet
+Visualización de contactos como marcadores en el mapa
+Click en el mapa permite:
+Seleccionar ubicación
+Abrir modal para crear contacto
+📍 Marcadores
+Se renderizan correctamente desde backend
+Coordenadas convertidas a tipo numérico
+Popup funcional (ajustado para mejor visualización)
+➕ Alta de contactos
+Modal con formulario (AddContactDialog)
+Datos enviados al backend junto con:
+lat
+lng
+Integración completa con API
+🔌 Backend conectado
+
+API funcionando en:
+
+http://localhost:3000/api
+Endpoints implementados:
+GET /contacts
+POST /contacts
+🗄️ Base de datos (MySQL)
+
+Tabla principal: contactos
+
+Campos:
+
+id
+pais_id
+nombre
+cargo
+empresa
+telefono
+email
+lat
+lng
+
+Tabla relacionada: paises
+
+Campos:
+
+id
+pais
+iso
+codigo_telefono
+continente
+ciudad ✅ (agregado posteriormente)
+🔄 Datos enriquecidos
+JOIN backend para traer:
+nombre del país
+continente
+código telefónico
+Datos listos para frontend
+🎨 UI / Layout
+Uso de Material UI
+Mapa ocupa toda la pantalla
+Componentes flotantes sobre el mapa
+Correcciones aplicadas:
+Eliminación de espacios grises
+Ajuste de bordes
+Mejor posicionamiento de popups
+⚙️ Tecnologías utilizadas
+Frontend
+React + Vite
+React Leaflet
+Material UI
+Axios
+Backend
+Node.js
+Express
+Base de datos
+MySQL
+📁 Estructura del proyecto
+Frontend
+src/
+ ├── components/
+ │    ├── MapView.jsx
+ │    ├── AddContactDialog.jsx
+ │
+ ├── pages/
+ │    ├── HomePage.jsx
+ │
+ ├── services/
+ │    ├── api.js
+Backend
+backend/
+ ├── controllers/
+ │    ├── contacts.controller.js
+ │
+ ├── routes/
+ │    ├── contacts.routes.js
+ │
+ ├── db/
+ │    ├── connection.js
+🔥 Problemas resueltos
+❌ Coordenadas como string → ✅ convertidas a Number
+❌ Continente aparecía como "Sin definir" → ✅ corregido desde DB
+❌ Mapa con espacios grises → ✅ solucionado
+❌ Popup mal posicionado → ✅ ahora fijo y más chico
+❌ Clicks que reabrían modales → ✅ controlados
+🧠 Decisiones importantes
+Backend devuelve datos ya enriquecidos (menos lógica en frontend)
+Uso de nombres en español en base de datos
+Separación clara entre:
+lógica de mapa
+lógica de formulario
+Popups simplificados para mejor UX
+🚧 Próximos pasos (prioridades)
+🔴 Alta prioridad
+🔐 Sistema de login moderno
+Pantalla de carga
+Animaciones
+Protección de rutas (CRUD)
+🔎 Buscador dinámico global
+Buscar por:
+país
+nombre
+empresa
+cargo
+Autocomplete
+Historial de búsquedas
+🟡 Media prioridad
+✏️ Edición de contactos (CRUD completo)
+🗑️ Eliminación de contactos
+📋 Vista tipo tabla/listado
+📍 Filtros por continente / país
+🟢 Baja prioridad (mejoras)
+🌐 Migración de MySQL → Supabase
+📱 Optimización mobile
+🎨 Mejoras visuales (UX/UI)
+⭐ Favoritos / contactos destacados
+🧪 Datos de ejemplo
+{
+  "nombre": "Carlos Gómez",
+  "cargo": "Director",
+  "empresa": "WAIFA",
+  "pais": "Argentina",
+  "lat": -34.6037,
+  "lng": -58.3816
+}
+⚠️ Notas
+Las coordenadas deben enviarse como números
+La tabla paises debe contener la columna ciudad
+Backend debe manejar correctamente los JOINs
+📌 Próximo objetivo inmediato
+
+👉 Implementar login moderno + protección del CRUD
+
+👨‍💻 Autor
+
+Proyecto desarrollado por Dani
