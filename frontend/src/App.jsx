@@ -1,8 +1,46 @@
 import "./App.css";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
 
 function App() {
-  return <HomePage />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <LoginPage />
+            </PublicOnlyRoute>
+          }
+        />
+
+        <Route
+          path="/auth/callback"
+          element={
+            <PublicOnlyRoute>
+              <AuthCallbackPage />
+            </PublicOnlyRoute>
+          }
+        />
+
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

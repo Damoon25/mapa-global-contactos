@@ -1,8 +1,8 @@
 import { supabase } from "../lib/supabase";
 
 // Traer todos los contactos
-export const getContacts = async () => {
-  const { data, error } = await supabase
+export const getContacts = async ({ userId, mapType }) => {
+  let query = supabase
     .from("contactos")
     .select(`
       id,
@@ -28,7 +28,15 @@ export const getContacts = async () => {
         telefono,
         email
       )
-    `);
+    `)
+    .eq("usuario_id", userId); // clave
+
+  // filtro por tipo de mapa
+  if (mapType === "argentina") {
+    query = query.eq("paises.nombre", "Argentina");
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error al obtener contactos:", error.message);

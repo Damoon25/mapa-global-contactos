@@ -134,7 +134,7 @@ export default function MapView({ contacts = [], drawerOpen = false }) {
         center={[15, -35]}
         zoom={3}
         minZoom={3}
-        maxZoom={8}
+        maxZoom={10}
         maxBounds={[
           [-70, -180],
           [85, 180],

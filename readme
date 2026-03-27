@@ -1,0 +1,259 @@
+# 🌍 Mapa Global de Contactos
+
+Aplicación web interactiva para visualizar, gestionar y buscar contactos a nivel global sobre un mapa.
+
+---
+
+## 🚀 Estado actual del proyecto
+
+🟢 Funcional  
+🟢 Con autenticación  
+🟢 Acceso restringido  
+🟡 En evolución hacia SaaS interno
+
+---
+
+## 🔐 Autenticación y seguridad
+
+### Métodos de login
+
+- Google OAuth (Supabase)
+- Email + Contraseña
+
+---
+
+### 🛡️ Sistema restrictivo (clave del proyecto)
+
+El acceso NO es público.
+
+Se implementó un sistema de whitelist mediante la tabla:
+
+```sql
+usuarios_autorizados
+
+Campos:
+
+email
+tipo_mapa (global | argentina)
+activo
+🔄 Flujo de autenticación
+Login con Google
+Usuario inicia sesión con Google
+Supabase autentica
+Se ejecuta AuthCallback
+Se valida email en usuarios_autorizados
+Si NO está autorizado:
+logout automático
+redirección a /login
+Si está autorizado:
+se crea/actualiza perfil
+acceso permitido
+Login con Email + Password
+Usuario ingresa credenciales
+Se valida contra Supabase Auth
+Se verifica en usuarios_autorizados
+Si está autorizado → entra
+Si no → acceso denegado
+🔒 Protección de rutas
+
+Implementado mediante:
+
+ProtectedRoute
+
+Valida:
+
+sesión activa
+usuario autorizado
+
+Evita acceso directo por URL.
+
+👤 Perfil de usuario
+
+Tabla: perfiles
+
+Se sincroniza automáticamente al login.
+
+Campos:
+
+id (auth.users)
+nombre_completo
+email
+avatar_url
+tipo_mapa
+🗺️ Mapa interactivo
+Implementado con Leaflet + React Leaflet
+Fullscreen
+Click en mapa:
+selecciona ubicación
+abre modal de alta
+📍 Marcadores
+Render dinámico desde backend
+Coordenadas convertidas correctamente a Number
+Popup custom (no Leaflet default)
+Posición fija optimizada
+➕ Alta de contactos
+Modal: AddContactDialog
+Envía:
+lat
+lng
+Integración completa con backend
+🔌 Backend
+
+Inicialmente implementado en:
+
+http://localhost:3000/api
+
+Endpoints:
+
+GET /contacts
+POST /contacts
+🗄️ Base de datos (actual)
+Migración en curso:
+
+MySQL → Supabase (PostgreSQL)
+
+Tablas principales
+contactos
+id
+pais_id
+nombre
+cargo
+empresa
+ciudad
+telefono
+email
+usuario_id
+paises
+id
+nombre
+iso
+codigo_telefono
+lat
+lng
+continente
+ciudad
+empleados
+id
+contacto_id
+nombre
+cargo
+telefono
+email
+perfiles
+id
+nombre_completo
+email
+avatar_url
+tipo_mapa
+usuarios_autorizados
+id
+email
+tipo_mapa
+activo
+🎛️ UI / UX
+Material UI
+Sidebar flotante
+Topbar transparente
+Drawer lateral
+Popup custom
+Menú de usuario con:
+avatar
+email
+tipo de acceso
+logout
+🌎 Filtros
+Buscador global
+
+Filtra por:
+
+país
+nombre
+empresa
+cargo
+Filtro por continente
+
+Botones con:
+
+color por continente
+hover moderno (elevación + sombra)
+estado activo visual
+
+Continentes:
+
+América
+Europa
+Asia
+África
+Oceanía
+🔥 Problemas resueltos
+❌ Coordenadas string → ✅ Number
+❌ Continente "Sin definir" → ✅ corregido
+❌ Mapa con espacios grises → ✅ solucionado
+❌ Popup mal posicionado → ✅ corregido
+❌ Clicks inconsistentes → ✅ controlados
+❌ Acceso abierto → ✅ ahora restringido
+❌ Usuarios no autorizados entrando → ✅ bloqueado
+🧠 Decisiones clave
+Separación entre:
+autenticación (Supabase)
+autorización (tabla propia)
+Backend devuelve datos enriquecidos
+Uso de español en DB
+UI desacoplada del mapa
+Popups custom para mejor UX
+⚙️ Tecnologías
+Frontend
+React + Vite
+Material UI
+Leaflet
+Backend / Infra
+Supabase
+PostgreSQL
+📁 Estructura
+src/
+ ├── components/
+ │    ├── MapView.jsx
+ │    ├── AddContactDialog.jsx
+ │    ├── auth/
+ │         ├── LoginCard.jsx
+ │         ├── ProtectedRoute.jsx
+ │
+ ├── hooks/
+ │    ├── useSession.js
+ │    ├── useProfile.js
+ │
+ ├── pages/
+ │    ├── HomePage.jsx
+ │    ├── LoginPage.jsx
+ │    ├── AuthCallbackPage.jsx
+ │
+ ├── api/
+ │    ├── authApi.js
+ │    ├── contactApi.js
+ │
+ ├── lib/
+ │    ├── supabase.js
+🚧 Próximos pasos
+🔴 Alta prioridad
+Panel admin para gestionar usuarios_autorizados
+CRUD completo (editar / eliminar contactos)
+Mejorar feedback de errores en login
+🟡 Media prioridad
+Historial de búsquedas
+Autocomplete avanzado
+Vista tabla de contactos
+🟢 Baja prioridad
+Mobile responsive
+Favoritos
+Optimización de performance
+Animaciones UI
+🧪 Ejemplo de contacto
+{
+  "nombre": "Carlos Gómez",
+  "cargo": "Director",
+  "empresa": "WAIFA",
+  "pais": "Argentina",
+  "lat": -34.6037,
+  "lng": -58.3816
+}
+```
