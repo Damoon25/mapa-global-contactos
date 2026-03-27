@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import SidePanel from "../components/layout/SidePanel";
 import {
   AppBar,
-  Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  Drawer,
   IconButton,
   Stack,
   TextField,
@@ -18,8 +17,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DownloadIcon from "@mui/icons-material/Download";
-import CloseIcon from "@mui/icons-material/Close";
-import PlaceIcon from "@mui/icons-material/Place";
 
 import { getContacts } from "../api/contactsApi";
 import MapView from "../components/MapView";
@@ -40,7 +37,7 @@ export default function HomePage() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedContinent, setSelectedContinent] = useState("Todos");
   const [selectedContact, setSelectedContact] = useState(null);
@@ -108,17 +105,17 @@ export default function HomePage() {
     }
   }, [filteredContacts, selectedContact]);
 
-  const toggleDrawer = () => {
-    setDrawerOpen((prev) => !prev);
+  const togglePanel = () => {
+    setPanelOpen((prev) => !prev);
   };
 
-  const closeDrawer = () => {
-    setDrawerOpen(false);
+  const closePanel = () => {
+    setPanelOpen(false);
   };
 
   const handleSelectContact = (contact) => {
     setSelectedContact(contact);
-    setDrawerOpen(true);
+    setPanelOpen(true);
   };
 
   const handleCloseDialog = () => {
@@ -261,7 +258,13 @@ export default function HomePage() {
   return (
     <Box className="app-root">
       <Box className="mini-sidebar">
-        <IconButton onClick={toggleDrawer}>
+        <IconButton onClick={togglePanel}>
+          <MenuIcon />
+        </IconButton>
+      </Box>
+
+      <Box className="mobile-menu-button">
+        <IconButton onClick={togglePanel}>
           <MenuIcon />
         </IconButton>
       </Box>
@@ -270,28 +273,32 @@ export default function HomePage() {
         <Toolbar className="topbar-toolbar">
           <Box className="topbar-panel">
             <Box className="topbar-layout">
-              <Box className="topbar-left">
-                <Box className="topbar-search-row">
-                  <IconButton
-                    className="menu-btn topbar-menu-btn"
-                    onClick={toggleDrawer}
-                  >
-                    <MenuIcon />
-                  </IconButton>
+              <Box className="topbar-row topbar-row--main">
+                <Box className="topbar-left">
+                  <Box className="topbar-search-row">
+                    <IconButton
+                      className="menu-btn topbar-menu-btn"
+                      onClick={togglePanel}
+                    >
+                      <MenuIcon />
+                    </IconButton>
 
-                  <Box className="search-box">
-                    <SearchIcon className="search-icon" />
-                    <TextField
-                      fullWidth
-                      variant="standard"
-                      placeholder="Buscar por país, nombre, empresa, cargo o ciudad"
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      InputProps={{ disableUnderline: true }}
-                    />
+                    <Box className="search-box">
+                      <SearchIcon className="search-icon" />
+                      <TextField
+                        fullWidth
+                        variant="standard"
+                        placeholder="Buscar por país, nombre, empresa, cargo o ciudad"
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        InputProps={{ disableUnderline: true }}
+                      />
+                    </Box>
                   </Box>
                 </Box>
+              </Box>
 
+              <Box className="topbar-row topbar-row--continents">
                 <Box className="continent-scroll">
                   <Stack direction="row" spacing={1}>
                     {CONTINENTES.map((continent) => (
@@ -314,79 +321,56 @@ export default function HomePage() {
                 </Box>
               </Box>
 
-              <Box className="topbar-right">
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  className="actions-wrap"
-                  alignItems="center"
-                >
-                  <Button
-                    variant="contained"
-                    startIcon={<UploadFileIcon />}
-                    className="action-btn import-btn"
-                    onClick={handleImport}
+              <Box className="topbar-row topbar-row--actions">
+                <Box className="topbar-actions-slot">
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    className="actions-wrap topbar-actions-wrap"
+                    alignItems="center"
                   >
-                    Importar
-                  </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<UploadFileIcon />}
+                      className="action-btn import-btn"
+                      onClick={handleImport}
+                    >
+                      Importar
+                    </Button>
 
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    className="action-btn"
-                    onClick={handleExport}
-                  >
-                    Exportar
-                  </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<DownloadIcon />}
+                      className="action-btn"
+                      onClick={handleExport}
+                    >
+                      Exportar
+                    </Button>
 
-                  <UserMenu user={session?.user} profile={profile} />
-                </Stack>
+                    <Box className="topbar-user-slot">
+                      <UserMenu user={session?.user} profile={profile} />
+                    </Box>
+                  </Stack>
+                </Box>
               </Box>
             </Box>
           </Box>
         </Toolbar>
       </AppBar>
 
-      <Drawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={closeDrawer}
-        PaperProps={{ className: "drawer-paper" }}
+      <SidePanel
+        open={panelOpen}
+        onClose={closePanel}
+        title={selectedContact?.paises?.nombre || "Mapa de contactos"}
+        subtitle={selectedContact?.empresa || "Directorio internacional"}
       >
-        <Box className="drawer-header">
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Avatar className="drawer-avatar">
-                <PlaceIcon />
-              </Avatar>
-
-              <Box>
-                <Typography className="drawer-title">
-                  {selectedContact?.paises?.nombre || "Mapa de contactos"}
-                </Typography>
-                <Typography variant="body2" className="drawer-subtitle">
-                  {selectedContact?.empresa || "Directorio internacional"}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <IconButton onClick={closeDrawer}>
-              <CloseIcon />
-            </IconButton>
-          </Stack>
-        </Box>
-
-        <Box className="drawer-body">{renderContactDetails()}</Box>
-      </Drawer>
+        {renderContactDetails()}
+      </SidePanel>
 
       <Box className="map-container">
         <MapView
           contacts={filteredContacts}
-          drawerOpen={drawerOpen}
+          panelOpen={panelOpen}
           profile={profile}
           user={session?.user}
         />
