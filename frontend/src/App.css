@@ -364,12 +364,13 @@ body,
   position: absolute;
   top: 0;
   left: 0;
-  width: var(--sidebar-width);
-  height: 100vh;
   z-index: 1400;
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: auto;
+  width: var(--sidebar-width);
+  height: 100vh;
   gap: 14px;
   padding: 14px 12px;
   background: var(--bg-glass);
@@ -390,6 +391,30 @@ body,
   background: #f1f5f9;
 }
 
+.mini-sidebar-btn {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12) !important;
+  color: #334155 !important;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease !important;
+}
+
+.mini-sidebar-btn:hover {
+  transform: translateY(-1px);
+  background: #ffffff !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16) !important;
+}
+
+.mini-sidebar-btn--recenter {
+  color: #2563eb !important;
+}
+
 /* =========================
    MOBILE MENU BUTTON
 ========================= */
@@ -407,7 +432,9 @@ body,
   left: 0;
   top: 0;
   width: var(--drawer-width);
-  height: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.96) 0%,
@@ -425,8 +452,10 @@ body,
   opacity: 0;
   pointer-events: none;
   transition:
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.22s ease;
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s ease,
+    box-shadow 0.3s ease;
+  will-change: transform, opacity;
 }
 
 .side-panel.open {
@@ -437,6 +466,7 @@ body,
 
 .side-panel-header {
   position: relative;
+  flex-shrink: 0 !important;
   padding: 26px 22px 18px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   background:
@@ -471,8 +501,12 @@ body,
 }
 
 .side-panel-content {
-  height: calc(100% - 84px);
-  overflow-y: auto;
+  display: flex;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: calc(100vh - 84px);
   padding: 18px;
 }
 
@@ -524,8 +558,44 @@ body,
 .side-panel-inner {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
   gap: 16px;
   min-height: 100%;
+  padding-right: 10px; /* separa la barra de las cards */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(148, 163, 184, 0.7) transparent; /* Firefox */
+}
+
+/* Chrome, Edge, Opera */
+.side-panel-inner::-webkit-scrollbar {
+  width: 10px;
+}
+
+.side-panel-inner::-webkit-scrollbar-track {
+  background: transparent;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.side-panel-inner::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(148, 163, 184, 0.85) 0%,
+    rgba(100, 116, 139, 0.85) 100%
+  );
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background-clip: padding-box;
+}
+
+.side-panel-inner::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(100, 116, 139, 0.95) 0%,
+    rgba(71, 85, 105, 0.95) 100%
+  );
 }
 
 .panel-primary-btn {
@@ -571,7 +641,8 @@ body,
     transform 0.22s ease,
     box-shadow 0.22s ease,
     border-color 0.22s ease,
-    background 0.22s ease;
+    background-color 0.22s ease;
+  will-change: transform, box-shadow;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05) !important;
 }
 
@@ -678,9 +749,9 @@ body,
   overflow: hidden;
 }
 
-.marker-popup-shell .leaflet-popup-content {
+.leaflet-popup-content {
   margin: 0 !important;
-  width: 240px !important;
+  padding: 0 !important;
 }
 
 .marker-popup-compact {
@@ -823,6 +894,20 @@ body,
 .marker-popup-action-btn--danger {
   background: #dc2626;
   color: white;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 20px !important;
+  padding: 0 !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18) !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: none !important;
+}
+
+.leaflet-popup-close-button {
+  display: none !important;
 }
 
 .mp-title strong {
@@ -1088,6 +1173,25 @@ body,
   background: #dc2626;
   color: #fff;
   box-shadow: 0 14px 26px rgba(220, 38, 38, 0.22);
+}
+
+.action-btn,
+.continent-chip,
+.contact-action-btn,
+.panel-primary-btn {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.action-btn:hover,
+.continent-chip:hover,
+.contact-action-btn:hover,
+.panel-primary-btn:hover {
+  transform: translateY(-1px);
 }
 
 @keyframes contactModalFadeIn {

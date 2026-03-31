@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import {
+  Avatar,
+  Box,
+  Chip,
+  Divider,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CloseIcon from "@mui/icons-material/Close";
 import "leaflet/dist/leaflet.css";
 
 const markerIcon = new L.Icon({
@@ -40,17 +54,22 @@ function FitBoundsToContacts({ contacts, drawerOpen, selectedContact }) {
     if (points.length === 0) return;
 
     if (points.length === 1) {
-      map.setView(points[0], 4, { animate: true });
+      map.flyTo(points[0], 3, {
+        animate: true,
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
       return;
     }
 
     const bounds = L.latLngBounds(points);
 
-    map.fitBounds(bounds, {
+    map.flyToBounds(bounds, {
       paddingTopLeft: drawerOpen ? [420, 140] : [100, 140],
       paddingBottomRight: [80, 80],
-      maxZoom: 4,
-      animate: true,
+      maxZoom: 3,
+      duration: 1.2,
+      easeLinearity: 0.25,
     });
   }, [contacts, drawerOpen, map, selectedContact]);
 
@@ -69,16 +88,31 @@ function OpenSelectedMarker({ selectedContact, drawerOpen, markerRefs }) {
 
     const timer = setTimeout(
       () => {
-        map.setView(
-          [Number(selectedContact.lat), Number(selectedContact.lng)],
-          5,
-          { animate: true },
+        const latLng = L.latLng(
+          Number(selectedContact.lat),
+          Number(selectedContact.lng),
         );
 
-        marker.openPopup();
-        map.invalidateSize();
+        const zoom = 5;
+
+        const point = map.project(latLng, zoom);
+
+        const offsetY = 220; // 🔥 ajustá esto
+
+        const newPoint = L.point(point.x, point.y - offsetY);
+        const newLatLng = map.unproject(newPoint, zoom);
+
+        map.flyTo(newLatLng, zoom, {
+          animate: true,
+          duration: 1.2,
+          easeLinearity: 0.25,
+        });
+
+        setTimeout(() => {
+          marker.openPopup();
+        }, 200);
       },
-      drawerOpen ? 250 : 100,
+      drawerOpen ? 280 : 140,
     );
 
     return () => clearTimeout(timer);
@@ -87,54 +121,204 @@ function OpenSelectedMarker({ selectedContact, drawerOpen, markerRefs }) {
   return null;
 }
 
-function MarkerPopupContent({ contact, onEdit, onDelete, onViewMore }) {
+function MarkerPopupContent({
+  contact,
+  onEdit,
+  onDelete,
+  onViewMore,
+  onClose,
+}) {
+  const initial = (contact.nombre || "?").charAt(0).toUpperCase();
+
   return (
-    <div className="marker-popup-compact">
-      <div className="mp-title">
-        <strong>{contact.nombre || "Sin nombre"}</strong>
-        <span>{contact.empresa || "-"}</span>
-      </div>
+    <Box
+      sx={{
+        width: 260,
+        px: 2,
+        py: 2,
+      }}
+    >
+      <Stack spacing={2.6}>
+        <Stack direction="row" spacing={1.2} alignItems="flex-start">
+          <Avatar
+            sx={{
+              width: 40,
+              height: 40,
+              fontSize: 18,
+              fontWeight: 700,
+              bgcolor: "#e5e7eb",
+              color: "#6b7280",
+            }}
+          >
+            {initial}
+          </Avatar>
 
-      <div className="mp-meta">
-        <span>{contact.paises?.nombre || "-"}</span>
-        {contact.ciudades?.name && <span>· {contact.ciudades.name}</span>}
-      </div>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography
+              sx={{
+                fontSize: 15,
+                fontWeight: 800,
+                color: "#111827",
+                lineHeight: 1.2,
+              }}
+            >
+              {contact.nombre || "Sin nombre"}
+            </Typography>
 
-      {contact.telefono && <div className="mp-phone">{contact.telefono}</div>}
+            <Typography
+              sx={{
+                mt: 0.45,
+                fontSize: 13,
+                color: "#64748b",
+                fontWeight: 600,
+              }}
+            >
+              {contact.empresa || "Sin empresa"}
+            </Typography>
+          </Box>
 
-      <div className="mp-actions">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewMore?.(contact);
-          }}
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose?.();
+            }}
+            sx={{
+              width: 30,
+              height: 30,
+              mt: -0.3,
+              color: "#94a3b8",
+              border: "1px solid #e5e7eb",
+              bgcolor: "#fff",
+              "&:hover": {
+                bgcolor: "#f8fafc",
+              },
+              transition: "all 0.18s ease",
+            }}
+          >
+            <CloseIcon sx={{ fontSize: 17 }} />
+          </IconButton>
+        </Stack>
+
+        <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
+          {contact.paises?.nombre ? (
+            <Chip
+              size="small"
+              label={contact.paises.nombre}
+              sx={{
+                height: 28,
+                borderRadius: "999px",
+                bgcolor: "#f3f4f6",
+                color: "#374151",
+                fontWeight: 500,
+              }}
+            />
+          ) : null}
+
+          {contact.ciudades?.name ? (
+            <Chip
+              size="small"
+              label={contact.ciudades.name}
+              sx={{
+                height: 28,
+                borderRadius: "999px",
+                bgcolor: "#f3f4f6",
+                color: "#374151",
+                fontWeight: 500,
+              }}
+            />
+          ) : null}
+        </Stack>
+
+        {contact.telefono ? (
+          <Typography
+            sx={{
+              fontSize: 14,
+              color: "#2563eb",
+              fontWeight: 500,
+              lineHeight: 1.2,
+            }}
+          >
+            {contact.telefono}
+          </Typography>
+        ) : null}
+
+        <Divider />
+
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="center"
+          alignItems="center"
         >
-          Ver más
-        </button>
+          <Tooltip title="Ver más">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewMore?.(contact);
+              }}
+              sx={{
+                width: 40,
+                height: 40,
+                border: "1px solid #bfdbfe",
+                color: "#2563eb",
+                bgcolor: "#eff6ff",
+                "&:hover": {
+                  bgcolor: "#dbeafe",
+                  transition: "all 0.18s ease",
+                },
+              }}
+            >
+              <VisibilityOutlinedIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.(contact);
-          }}
-        >
-          ✎
-        </button>
+          <Tooltip title="Editar">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(contact);
+              }}
+              sx={{
+                width: 40,
+                height: 40,
+                border: "1px solid #d1d5db",
+                color: "#374151",
+                bgcolor: "#ffffff",
+                "&:hover": {
+                  bgcolor: "#f9fafb",
+                  transition: "all 0.18s ease",
+                },
+              }}
+            >
+              <EditOutlinedIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
 
-        <button
-          type="button"
-          className="danger"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.(contact);
-          }}
-        >
-          🗑
-        </button>
-      </div>
-    </div>
+          <Tooltip title="Eliminar">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(contact);
+              }}
+              sx={{
+                width: 40,
+                height: 40,
+                border: "1px solid #fecaca",
+                color: "#dc2626",
+                bgcolor: "#fff5f5",
+                "&:hover": {
+                  bgcolor: "#fee2e2",
+                  transition: "all 0.18s ease",
+                },
+              }}
+            >
+              <DeleteOutlineIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }
 
@@ -159,10 +343,10 @@ export default function MapView({
 
   return (
     <MapContainer
-      center={[15, -35]}
+      center={[20, 0]}
       zoom={3}
       minZoom={3}
-      maxZoom={10}
+      maxZoom={12}
       maxBounds={[
         [-70, -180],
         [85, 180],
@@ -206,12 +390,15 @@ export default function MapView({
             },
           }}
         >
-          <Popup className="marker-popup-shell" autoPan closeButton>
+          <Popup className="marker-popup-shell" autoPan closeButton={false}>
             <MarkerPopupContent
               contact={contact}
               onEdit={onEditContact}
               onDelete={onDeleteContact}
               onViewMore={onViewMore}
+              onClose={() => {
+                markerRefs.current[contact.id]?.closePopup();
+              }}
             />
           </Popup>
         </Marker>

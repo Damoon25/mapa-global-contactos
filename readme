@@ -1,68 +1,127 @@
-## 🚀 Estado actual del proyecto
+# 🌍 Mapa Global de Contactos
 
-El proyecto "Mapa Global de Contactos" se encuentra en una etapa funcional con CRUD completo de contactos y mejoras en la UI.
-
-### ✅ Funcionalidades implementadas
-
-- Autenticación con Supabase (Google + email/password)
-- Control de acceso mediante whitelist (`usuarios_autorizados`)
-- Mapa interactivo con Leaflet
-- CRUD completo de contactos:
-  - Crear contacto
-  - Editar contacto
-  - Eliminar contacto (con confirmación)
-  - Listar contactos y centrar en mapa
-- Relaciones en base de datos:
-  - `contactos` → `paises`
-  - `contactos` → `ciudades`
-- Selección dinámica de ubicación:
-  - País → Provincia (solo Argentina) → Ciudad
-- Autocompletado de ciudades desde base de datos
-- Autocompletado de email (`@gmail.com`, etc.)
-- Prefijo telefónico automático según país
-- Empleados asociados a cada contacto
-- UI moderna con Material UI
-- Modales reutilizables para alta/edición
-- Feedback visual:
-  - Estado "Guardando..."
-  - Validaciones de formulario
+Aplicación web para gestionar contactos geolocalizados a nivel mundial, con visualización en mapa interactivo, CRUD completo y herramientas de importación/exportación.
 
 ---
 
-### 🧠 Decisiones importantes
+## 🚀 Tecnologías utilizadas
 
-- ❌ Se eliminó el uso de ciudad como texto libre
-- ✅ Se usa `ciudad_id` como referencia única
-- ✅ Latitud y longitud provienen de la ciudad seleccionada
-- ❌ No se guarda ISO en contactos (está en `paises`)
-- ✅ Los países se insertan dinámicamente cuando se usan
-
----
-
-### 🛠️ Estructura clave
-
-- `AddContactDialog.jsx` → Alta/Edición de contactos
-- `ConfirmDeleteDialog.jsx` → Confirmación de eliminación
-- `HomePage.jsx` → Orquestación del mapa y lista
-- `contactsApi.js` → Conexión con Supabase
+- ⚛️ React (Vite)
+- 🗺️ Leaflet (mapa interactivo)
+- 🧩 MUI (Material UI)
+- 🟢 Supabase (base de datos + auth)
+- 📦 XLSX (importación/exportación Excel)
 
 ---
 
-### ⚠️ Problemas resueltos recientemente
+## 🔐 Autenticación
 
-- Contactos no aparecían después de crear (falta de refresh)
-- Error `ciudad` column not found
-- Desincronización entre `ciudad` y `ciudad_id`
-- UI desalineada en formularios
-- Imports faltantes en API (`getCitiesByCountry`)
-- Relaciones no cargadas en queries (`ciudades`, `paises`)
+- Login con Google y email/password
+- Validación mediante tabla `usuarios_autorizados`
+- Sin acceso → bloqueado automáticamente
 
 ---
 
-### 🔜 Próximos pasos
+## 📊 Estructura de datos
 
-- Panel de administración para `usuarios_autorizados`
-- Separación de "Mapa Global" y "Mapa Argentina"
-- Mejoras UX en login (errores + loading)
-- Refactor de estructura del proyecto
-- Optimización de queries y performance
+### Tablas principales:
+- `contactos`
+- `paises`
+- `ciudades`
+- `provincias`
+- `empleados`
+- `perfiles`
+- `usuarios_autorizados`
+
+📌 Notas:
+- Lat/Lng SOLO en `contactos`
+- Países se insertan dinámicamente
+- Relaciones normalizadas (FK)
+
+---
+
+## ⚙️ Funcionalidades actuales
+
+### 🗺️ Mapa
+- Visualización de contactos con markers
+- Popup moderno con acciones:
+  - Ver
+  - Editar
+  - Eliminar
+- Auto-fit de mapa cuando no hay contacto seleccionado
+- Animaciones suaves (no bruscas)
+
+---
+
+### 📋 Sidebar (estilo Google Maps)
+- Botón: **Agregar contacto**
+- Lista de contactos con:
+  - Edición
+  - Eliminación
+- Sistema de paginado progresivo:
+  - Inicial: 5
+  - “Mostrar más” → +10
+  - “Mostrar menos”
+- Contador dinámico de contactos
+
+---
+
+### 📱 Mobile UX
+- Al seleccionar contacto:
+  - Se cierra sidebar
+  - Se centra el mapa
+  - Se abre popup
+
+---
+
+### 🎯 Mini Sidebar (izquierda)
+- Botón menú
+- Botón **Recentrar mapa**
+  - Limpia selección
+  - Recalcula bounds automáticamente
+
+---
+
+### 🔍 Búsqueda y filtros
+- Buscador global:
+  - Nombre
+  - Empresa
+  - Cargo
+  - País / ciudad / provincia
+- Filtro por continente (chips)
+
+---
+
+### 📥 Importación Excel
+- Validación de datos
+- Control de:
+  - duplicados
+  - errores
+- Modal con errores detallados
+
+---
+
+### 📤 Exportación Excel
+- Exporta contactos filtrados
+- Feedback visual
+
+---
+
+### 🎨 UI/UX
+- Estética moderna (tipo SaaS)
+- Botones Import/Export en verde
+- Popups rediseñados (padding, iconos, alineación)
+- Scrollbar custom
+- Animaciones suaves
+
+---
+🧪 Estado del proyecto
+
+🟢 Funcional
+🟢 CRUD completo
+🟢 Import/Export operativo
+🟢 UX avanzada en progreso
+
+👤 Autor
+
+Damoon Art

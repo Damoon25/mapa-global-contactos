@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import useSession from "../../hooks/useSession";
 import { getAuthorizedUser, signOut } from "../../api/authApi";
+import FullScreenLoader from "../common/FullScreenLoader";
 
 export default function ProtectedRoute({ children }) {
   const { session, loadingSession } = useSession();
@@ -33,7 +34,12 @@ export default function ProtectedRoute({ children }) {
   }, [session, loadingSession]);
 
   if (loadingSession || isAuthorized === null) {
-    return <p style={{ padding: "24px" }}>Validando acceso...</p>;
+    return (
+      <FullScreenLoader
+        title="Validando acceso..."
+        subtitle="Estamos comprobando tu sesión para ingresar al mapa."
+      />
+    );
   }
 
   if (!session || !isAuthorized) {

@@ -35,50 +35,56 @@ export async function getCountries() {
 }
 
 /**
- * Trae contactos con país y empleados asociados
+ * Trae contactos con país, provincia, ciudad y empleados asociados
  */
 export async function getContacts() {
   const { data, error } = await supabase
     .from("contactos")
     .select(`
-            id,
-            pais_id,
-            provincia_id,
-            ciudad_id,
-            nombre,
-            cargo,
-            empresa,
-            direccion,
-            telefono,
-            email,
-            usuario_id,
-            lat,
-            lng,
-            paises (
-              id,
-              nombre,
-              iso,
-              codigo_telefono,
-              continente
-            ),
-            ciudades (
-              id,
-              name,
-              lat,
-              lng,
-              pais_id,
-              provincia_id,
-              population
-            ),
-            empleados (
-              id,
-              contacto_id,
-              nombre,
-              cargo,
-              telefono,
-              email
-            )
-          `)
+      id,
+      pais_id,
+      provincia_id,
+      ciudad_id,
+      nombre,
+      cargo,
+      empresa,
+      direccion,
+      telefono,
+      email,
+      usuario_id,
+      lat,
+      lng,
+      paises (
+        id,
+        nombre,
+        iso,
+        codigo_telefono,
+        continente
+      ),
+      provincias (
+        id,
+        nombre,
+        codigo,
+        pais_id
+      ),
+      ciudades (
+        id,
+        name,
+        lat,
+        lng,
+        pais_id,
+        provincia_id,
+        population
+      ),
+      empleados (
+        id,
+        contacto_id,
+        nombre,
+        cargo,
+        telefono,
+        email
+      )
+    `)
     .order("id", { ascending: false });
 
   if (error) {
@@ -106,45 +112,53 @@ export async function searchContacts(searchTerm) {
   const { data, error } = await supabase
     .from("contactos")
     .select(`
-            id,
-            pais_id,
-            provincia_id,
-            ciudad_id,
-            nombre,
-            cargo,
-            empresa,
-            direccion,
-            telefono,
-            email,
-            usuario_id,
-            lat,
-            lng,
-            paises (
-              id,
-              nombre,
-              iso,
-              codigo_telefono,
-              continente
-            ),
-            ciudades (
-              id,
-              name,
-              lat,
-              lng,
-              pais_id,
-              provincia_id,
-              population
-            ),
-            empleados (
-              id,
-              contacto_id,
-              nombre,
-              cargo,
-              telefono,
-              email
-            )
-          `)
-    .or(`nombre.ilike.%${term}%,cargo.ilike.%${term}%,empresa.ilike.%${term}%,email.ilike.%${term}%`)
+      id,
+      pais_id,
+      provincia_id,
+      ciudad_id,
+      nombre,
+      cargo,
+      empresa,
+      direccion,
+      telefono,
+      email,
+      usuario_id,
+      lat,
+      lng,
+      paises (
+        id,
+        nombre,
+        iso,
+        codigo_telefono,
+        continente
+      ),
+      provincias (
+        id,
+        nombre,
+        codigo,
+        pais_id
+      ),
+      ciudades (
+        id,
+        name,
+        lat,
+        lng,
+        pais_id,
+        provincia_id,
+        population
+      ),
+      empleados (
+        id,
+        contacto_id,
+        nombre,
+        cargo,
+        telefono,
+        email
+      )
+    `)
+    .or(
+      `nombre.ilike.%${term}%,cargo.ilike.%${term}%,empresa.ilike.%${term}%,email.ilike.%${term}%`,
+    )
     .order("id", { ascending: false });
 
   if (error) {
@@ -193,7 +207,11 @@ async function insertEmployees(contactId, empleados = []) {
   RECOLECTAR DATOS DE LATITUD Y LONGITUD PARA CONTACTOS EXISTENTES
 */
 
-export async function resolveCityCoordinates({ ciudad, paisId, provinciaId = null }) {
+export async function resolveCityCoordinates({
+  ciudad,
+  paisId,
+  provinciaId = null,
+}) {
   const city = (ciudad || "").trim();
 
   if (!city || !paisId) {
@@ -215,7 +233,9 @@ export async function resolveCityCoordinates({ ciudad, paisId, provinciaId = nul
     .limit(1);
 
   if (error) {
-    throw new Error(`Error al resolver coordenadas de ciudad: ${error.message}`);
+    throw new Error(
+      `Error al resolver coordenadas de ciudad: ${error.message}`,
+    );
   }
 
   const match = data?.[0];
@@ -297,36 +317,42 @@ export async function createContact(payload) {
     .from("contactos")
     .insert(contactoPayload)
     .select(`
-            id,
-            pais_id,
-            provincia_id,
-            ciudad_id,
-            nombre,
-            cargo,
-            empresa,
-            direccion,
-            telefono,
-            email,
-            usuario_id,
-            lat,
-            lng,
-            paises (
-              id,
-              nombre,
-              iso,
-              codigo_telefono,
-              continente
-            ),
-            ciudades (
-              id,
-              name,
-              lat,
-              lng,
-              pais_id,
-              provincia_id,
-              population
-            )
-          `)
+      id,
+      pais_id,
+      provincia_id,
+      ciudad_id,
+      nombre,
+      cargo,
+      empresa,
+      direccion,
+      telefono,
+      email,
+      usuario_id,
+      lat,
+      lng,
+      paises (
+        id,
+        nombre,
+        iso,
+        codigo_telefono,
+        continente
+      ),
+      provincias (
+        id,
+        nombre,
+        codigo,
+        pais_id
+      ),
+      ciudades (
+        id,
+        name,
+        lat,
+        lng,
+        pais_id,
+        provincia_id,
+        population
+      )
+    `)
     .single();
 
   if (contactError) {
@@ -366,36 +392,42 @@ export async function updateContact(contactId, payload) {
     .update(contactoPayload)
     .eq("id", contactId)
     .select(`
-            id,
-            pais_id,
-            provincia_id,
-            ciudad_id,
-            nombre,
-            cargo,
-            empresa,
-            direccion,
-            telefono,
-            email,
-            usuario_id,
-            lat,
-            lng,
-            paises (
-              id,
-              nombre,
-              iso,
-              codigo_telefono,
-              continente
-            ),
-            ciudades (
-              id,
-              name,
-              lat,
-              lng,
-              pais_id,
-              provincia_id,
-              population
-            )
-          `)
+      id,
+      pais_id,
+      provincia_id,
+      ciudad_id,
+      nombre,
+      cargo,
+      empresa,
+      direccion,
+      telefono,
+      email,
+      usuario_id,
+      lat,
+      lng,
+      paises (
+        id,
+        nombre,
+        iso,
+        codigo_telefono,
+        continente
+      ),
+      provincias (
+        id,
+        nombre,
+        codigo,
+        pais_id
+      ),
+      ciudades (
+        id,
+        name,
+        lat,
+        lng,
+        pais_id,
+        provincia_id,
+        population
+      )
+    `)
     .single();
 
   if (updateError) {
@@ -408,7 +440,9 @@ export async function updateContact(contactId, payload) {
     .eq("contacto_id", contactId);
 
   if (deleteEmployeesError) {
-    throw new Error(`Error al reemplazar empleados: ${deleteEmployeesError.message}`);
+    throw new Error(
+      `Error al reemplazar empleados: ${deleteEmployeesError.message}`,
+    );
   }
 
   const empleados = await insertEmployees(contactId, payload.empleados);
@@ -444,4 +478,82 @@ export async function deleteContact(contactId) {
   }
 
   return true;
+}
+
+export async function findExistingContact({
+  email,
+  nombre,
+  empresa,
+  paisId,
+  ciudadId = null,
+}) {
+  const normalizedEmail = toNullableString(email)?.toLowerCase();
+  const normalizedNombre = toNullableString(nombre);
+  const normalizedEmpresa = toNullableString(empresa);
+
+  if (normalizedEmail) {
+    let query = supabase
+      .from("contactos")
+      .select("id, nombre, empresa, email, pais_id, ciudad_id")
+      .eq("pais_id", paisId)
+      .ilike("email", normalizedEmail)
+      .limit(1);
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(`Error al buscar contacto existente por email: ${error.message}`);
+    }
+
+    if (data?.length) {
+      return data[0];
+    }
+  }
+
+  let query = supabase
+    .from("contactos")
+    .select("id, nombre, empresa, email, pais_id, ciudad_id")
+    .eq("pais_id", paisId)
+    .ilike("nombre", normalizedNombre || "");
+
+  if (normalizedEmpresa) {
+    query = query.ilike("empresa", normalizedEmpresa);
+  }
+
+  if (ciudadId) {
+    query = query.eq("ciudad_id", ciudadId);
+  }
+
+  const { data, error } = await query.limit(1);
+
+  if (error) {
+    throw new Error(`Error al buscar contacto existente por datos base: ${error.message}`);
+  }
+
+  return data?.[0] ?? null;
+}
+
+
+export async function getCitiesForImport({
+  paisId,
+  provinciaId = null,
+}) {
+  if (!paisId) return [];
+
+  let query = supabase
+    .from("ciudades")
+    .select("id, name, lat, lng, pais_id, provincia_id, population")
+    .eq("pais_id", paisId);
+
+  if (provinciaId) {
+    query = query.eq("provincia_id", provinciaId);
+  }
+
+  const { data, error } = await query.order("population", { ascending: false });
+
+  if (error) {
+    throw new Error(`Error al obtener ciudades para importación: ${error.message}`);
+  }
+
+  return data ?? [];
 }
