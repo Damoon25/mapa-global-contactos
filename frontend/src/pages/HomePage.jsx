@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SidePanel from "../components/layout/SidePanel";
 import {
+  getContacts,
+  getCountries,
+  createContact,
+  updateContact,
+  deleteContact,
+} from "../api/contactsApi";
+import {
   AppBar,
   Box,
   Button,
@@ -17,58 +24,71 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DownloadIcon from "@mui/icons-material/Download";
-
-import { getContacts } from "../api/contactsApi";
 import MapView from "../components/MapView";
 import AddContactDialog from "../components/AddContactDialog";
+import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
 import useSession from "../hooks/useSession";
 import useProfile from "../hooks/useProfile";
 import UserMenu from "../components/auth/UserMenu";
 
-const CONTINENTES = ["Todos", "América", "Europa", "Asia", "África", "Oceanía"];
+const CONTINENTES = ["Todos", "America", "Europa", "Asia", "Africa", "Oceania"];
 
 export default function HomePage() {
   const { session, loadingSession } = useSession();
   const { profile, loadingProfile } = useProfile(session?.user);
 
   const [contacts, setContacts] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
+  const [dialogMode, setDialogMode] = useState("create");
+  const [contactToEdit, setContactToEdit] = useState(null);
+  const [detailContact, setDetailContact] = useState(null);
 
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [selectedContinent, setSelectedContinent] = useState("Todos");
   const [selectedContact, setSelectedContact] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadContacts = useCallback(async () => {
     try {
       setLoading(true);
-
-      const mapType = profile?.tipo_mapa || "global";
-      const data = await getContacts({
-        userId: session?.user?.id,
-        mapType,
-      });
-
+      const data = await getContacts();
       setContacts(data);
 
       if (data.length > 0) {
-        setSelectedContact(data[0]);
+        setSelectedContact((prev) => prev ?? data[0]);
+      } else {
+        setSelectedContact(null);
       }
     } catch (error) {
       console.error("Error loading contacts:", error);
     } finally {
       setLoading(false);
     }
-  }, [profile?.tipo_mapa, session?.user?.id]);
+  }, []);
+
+  const loadCountries = useCallback(async () => {
+    try {
+      const data = await getCountries();
+      setCountries(data);
+      console.log("Countries loaded:", data);
+    } catch (error) {
+      console.error("Error loading countries:", error);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loadingSession && !loadingProfile && session?.user) {
       loadContacts();
+      loadCountries();
     }
-  }, [loadContacts, loadingSession, loadingProfile, session]);
+  }, [loadContacts, loadCountries, loadingSession, loadingProfile, session]);
 
   const filteredContacts = useMemo(() => {
     const text = searchText.trim().toLowerCase();
@@ -79,7 +99,7 @@ export default function HomePage() {
         contact.nombre?.toLowerCase().includes(text) ||
         contact.cargo?.toLowerCase().includes(text) ||
         contact.empresa?.toLowerCase().includes(text) ||
-        contact.ciudad?.toLowerCase().includes(text) ||
+        contact.ciudades?.name?.toLowerCase().includes(text) ||
         contact.paises?.nombre?.toLowerCase().includes(text) ||
         contact.paises?.continente?.toLowerCase().includes(text);
 
@@ -115,18 +135,107 @@ export default function HomePage() {
 
   const handleSelectContact = (contact) => {
     setSelectedContact(contact);
-    setPanelOpen(true);
+  };
+
+  const handleViewMore = (contact) => {
+    setDetailContact(contact);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedPosition(null);
+    setContactToEdit(null);
+    setDialogMode("create");
+  };
+
+  const handleOpenCreate = () => {
+    setDialogMode("create");
+    setContactToEdit(null);
+    setSelectedPosition(null);
+    setOpenDialog(true);
+  };
+
+  const handleOpenEdit = (contact) => {
+    setDialogMode("edit");
+    setContactToEdit(contact);
+    setSelectedPosition({
+      lat: contact?.lat ?? "",
+      lng: contact?.lng ?? "",
+    });
+    setOpenDialog(true);
+  };
+
+  const handleDeleteContact = (contact) => {
+    setContactToDelete(contact);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    if (deleting) return;
+    setDeleteDialogOpen(false);
+    setContactToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!contactToDelete?.id) return;
+
+    try {
+      setDeleting(true);
+
+      await deleteContact(contactToDelete.id);
+
+      setContacts((prev) =>
+        prev.filter(
+          (contact) => String(contact.id) !== String(contactToDelete.id),
+        ),
+      );
+
+      if (String(selectedContact?.id) === String(contactToDelete.id)) {
+        setSelectedContact(null);
+      }
+
+      if (String(detailContact?.id) === String(contactToDelete.id)) {
+        setDetailContact(null);
+      }
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleCreateContact = async (formData) => {
-    console.log("Received form data:", formData);
-    console.log("Selected position:", selectedPosition);
-    handleCloseDialog();
+    try {
+      console.log("Modo:", dialogMode);
+      console.log("Received form data:", formData);
+      console.log("Selected position:", selectedPosition);
+      console.log("Editing contact:", contactToEdit);
+
+      if (dialogMode === "edit" && contactToEdit?.id) {
+        const updatedContact = await updateContact(contactToEdit.id, formData);
+
+        setContacts((prev) =>
+          prev.map((contact) =>
+            String(contact.id) === String(contactToEdit.id)
+              ? updatedContact
+              : contact,
+          ),
+        );
+
+        setSelectedContact(updatedContact);
+      } else {
+        const createdContact = await createContact(formData);
+
+        setContacts((prev) => [createdContact, ...prev]);
+        setSelectedContact(createdContact);
+      }
+
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Error saving contact:", error);
+    }
   };
 
   const handleImport = () => {
@@ -138,86 +247,15 @@ export default function HomePage() {
   };
 
   const renderContactDetails = () => {
-    if (!selectedContact) {
-      return (
-        <Stack spacing={2}>
-          <Typography className="section-title">Sin selección</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Elegí un contacto desde la lista o filtrá resultados desde la barra
-            superior.
-          </Typography>
-        </Stack>
-      );
-    }
-
     return (
-      <>
-        <Typography className="country-title">
-          {selectedContact.nombre}
-        </Typography>
-
-        <Stack direction="row" spacing={1} className="country-meta">
-          {selectedContact.paises?.continente && (
-            <Chip label={selectedContact.paises.continente} />
-          )}
-          {selectedContact.ciudad && <Chip label={selectedContact.ciudad} />}
-          {selectedContact.cargo && <Chip label={selectedContact.cargo} />}
-        </Stack>
-
-        <Typography className="section-title">Información principal</Typography>
-
-        <Stack spacing={1.2} className="info-list" mb={3}>
-          <Typography>
-            <strong>País:</strong> {selectedContact.paises?.nombre || "-"}
-          </Typography>
-          <Typography>
-            <strong>Empresa:</strong> {selectedContact.empresa || "-"}
-          </Typography>
-          <Typography>
-            <strong>Cargo:</strong> {selectedContact.cargo || "-"}
-          </Typography>
-          <Typography>
-            <strong>Teléfono:</strong>{" "}
-            {selectedContact.paises?.codigo_telefono
-              ? `${selectedContact.paises.codigo_telefono} `
-              : ""}
-            {selectedContact.telefono || "-"}
-          </Typography>
-          <Typography>
-            <strong>Email:</strong> {selectedContact.email || "-"}
-          </Typography>
-        </Stack>
-
-        <Typography className="section-title">Empleados asociados</Typography>
-
-        <Stack spacing={1.2} mb={3}>
-          {selectedContact.empleados?.length > 0 ? (
-            selectedContact.empleados.map((empleado) => (
-              <Card key={empleado.id} className="country-card">
-                <CardContent sx={{ "&:last-child": { pb: 2 } }}>
-                  <Typography className="country-card-title">
-                    {empleado.nombre}
-                  </Typography>
-                  <Typography className="country-card-subtitle">
-                    {empleado.cargo || "Sin cargo"}
-                  </Typography>
-
-                  {empleado.telefono && (
-                    <Typography variant="body2">{empleado.telefono}</Typography>
-                  )}
-
-                  {empleado.email && (
-                    <Typography variant="body2">{empleado.email}</Typography>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No hay empleados cargados.
-            </Typography>
-          )}
-        </Stack>
+      <Stack spacing={2}>
+        <Button
+          variant="contained"
+          onClick={handleOpenCreate}
+          className="panel-primary-btn"
+        >
+          Agregar contacto
+        </Button>
 
         <Typography className="section-title">Contactos encontrados</Typography>
 
@@ -230,13 +268,44 @@ export default function HomePage() {
               }`}
               onClick={() => handleSelectContact(contact)}
             >
-              <CardContent sx={{ "&:last-child": { pb: 2 } }}>
-                <Typography className="country-card-title">
-                  {contact.nombre}
-                </Typography>
-                <Typography className="country-card-subtitle">
-                  {contact.paises?.nombre || "-"} · {contact.empresa || "-"}
-                </Typography>
+              <CardContent
+                className="country-card-content"
+                sx={{ "&:last-child": { pb: 2 } }}
+              >
+                <Box className="country-card-top">
+                  <Box className="country-card-main">
+                    <Typography className="country-card-title">
+                      {contact.nombre}
+                    </Typography>
+                    <Typography className="country-card-subtitle">
+                      {contact.paises?.nombre || "-"} · {contact.empresa || "-"}
+                    </Typography>
+                  </Box>
+
+                  <Box className="country-card-actions">
+                    <IconButton
+                      size="small"
+                      className="contact-action-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenEdit(contact);
+                      }}
+                    >
+                      ✎
+                    </IconButton>
+
+                    <IconButton
+                      size="small"
+                      className="contact-action-btn contact-action-btn--danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDeleteContact(contact);
+                      }}
+                    >
+                      🗑
+                    </IconButton>
+                  </Box>
+                </Box>
               </CardContent>
             </Card>
           ))}
@@ -247,7 +316,7 @@ export default function HomePage() {
             </Typography>
           )}
         </Stack>
-      </>
+      </Stack>
     );
   };
 
@@ -361,8 +430,8 @@ export default function HomePage() {
       <SidePanel
         open={panelOpen}
         onClose={closePanel}
-        title={selectedContact?.paises?.nombre || "Mapa de contactos"}
-        subtitle={selectedContact?.empresa || "Directorio internacional"}
+        title="Mapa de contactos"
+        subtitle="Directorio internacional"
       >
         {renderContactDetails()}
       </SidePanel>
@@ -370,18 +439,145 @@ export default function HomePage() {
       <Box className="map-container">
         <MapView
           contacts={filteredContacts}
-          panelOpen={panelOpen}
-          profile={profile}
-          user={session?.user}
+          drawerOpen={panelOpen}
+          selectedContact={selectedContact}
+          onSelectContact={handleSelectContact}
+          onEditContact={handleOpenEdit}
+          onDeleteContact={handleDeleteContact}
+          onViewMore={handleViewMore}
         />
       </Box>
 
       <AddContactDialog
         open={openDialog}
+        mode={dialogMode}
+        initialData={contactToEdit}
         onClose={handleCloseDialog}
         onSave={handleCreateContact}
         selectedPosition={selectedPosition}
+        countries={countries}
       />
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        contact={contactToDelete}
+        loading={deleting}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleConfirmDelete}
+      />
+
+      {detailContact && (
+        <div
+          className="contact-modal-overlay"
+          onClick={() => setDetailContact(null)}
+        >
+          <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={() => setDetailContact(null)}
+            >
+              ×
+            </button>
+
+            <div className="contact-modal-header">
+              <div className="contact-modal-avatar">
+                {(detailContact.nombre || "?").charAt(0).toUpperCase()}
+              </div>
+
+              <div className="contact-modal-header-text">
+                <h2>{detailContact.nombre || "Sin nombre"}</h2>
+                <p>{detailContact.empresa || "Sin empresa"}</p>
+              </div>
+            </div>
+
+            <div className="contact-modal-chips">
+              {detailContact.paises?.nombre && (
+                <span>{detailContact.paises.nombre}</span>
+              )}
+              {detailContact.ciudad && (
+                <span>{detailContact.ciudades?.name || "-"}</span>
+              )}
+              {detailContact.cargo && <span>{detailContact.cargo}</span>}
+            </div>
+
+            <div className="contact-modal-grid">
+              <div className="contact-modal-card">
+                <h3>Resumen del contacto</h3>
+                <div className="contact-modal-info-list">
+                  <p>
+                    <b>País:</b> {detailContact.paises?.nombre || "-"}
+                  </p>
+                  <p>
+                    <b>Ciudad:</b> {detailContact.ciudades?.name || "-"}
+                  </p>
+                  <p>
+                    <b>Dirección:</b> {detailContact.direccion || "-"}
+                  </p>
+                  <p>
+                    <b>Empresa:</b> {detailContact.empresa || "-"}
+                  </p>
+                  <p>
+                    <b>Cargo:</b> {detailContact.cargo || "-"}
+                  </p>
+                  <p>
+                    <b>Teléfono:</b> {detailContact.telefono || "-"}
+                  </p>
+                  <p>
+                    <b>Email:</b> {detailContact.email || "-"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="contact-modal-card">
+                <h3>Empleados asociados</h3>
+
+                {detailContact.empleados?.length > 0 ? (
+                  <div className="contact-modal-employees">
+                    {detailContact.empleados.map((empleado) => (
+                      <div key={empleado.id} className="contact-modal-employee">
+                        <div className="contact-modal-employee-name">
+                          {empleado.nombre}
+                        </div>
+                        <div className="contact-modal-employee-role">
+                          {empleado.cargo || "Sin cargo"}
+                        </div>
+                        {empleado.telefono && <div>{empleado.telefono}</div>}
+                        {empleado.email && <div>{empleado.email}</div>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="contact-modal-empty">
+                    No hay empleados cargados.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="contact-modal-actions">
+              <button
+                className="contact-modal-btn contact-modal-btn--secondary"
+                onClick={() => {
+                  setDetailContact(null);
+                  handleOpenEdit(detailContact);
+                }}
+              >
+                Editar
+              </button>
+
+              <button
+                className="contact-modal-btn contact-modal-btn--danger"
+                onClick={() => {
+                  setDetailContact(null);
+                  handleDeleteContact(detailContact);
+                }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Box>
   );
 }

@@ -1,7 +1,16 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+const markerIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
 function ResizeMapOnLayoutChange({ trigger }) {
   const map = useMap();
@@ -17,24 +26,16 @@ function ResizeMapOnLayoutChange({ trigger }) {
   return null;
 }
 
-function FitBoundsToContacts({ contacts, drawerOpen }) {
+function FitBoundsToContacts({ contacts, drawerOpen, selectedContact }) {
   const map = useMap();
 
   useEffect(() => {
+    if (selectedContact?.lat != null && selectedContact?.lng != null) return;
     if (!contacts || contacts.length === 0) return;
 
     const points = contacts
-      .filter(
-        (contact) =>
-          contact?.paises?.lat !== null &&
-          contact?.paises?.lat !== undefined &&
-          contact?.paises?.lng !== null &&
-          contact?.paises?.lng !== undefined
-      )
-      .map((contact) => [
-        Number(contact.paises.lat),
-        Number(contact.paises.lng),
-      ]);
+      .filter((contact) => contact?.lat != null && contact?.lng != null)
+      .map((contact) => [Number(contact.lat), Number(contact.lng)]);
 
     if (points.length === 0) return;
 
@@ -51,127 +52,170 @@ function FitBoundsToContacts({ contacts, drawerOpen }) {
       maxZoom: 4,
       animate: true,
     });
-  }, [contacts, drawerOpen, map]);
+  }, [contacts, drawerOpen, map, selectedContact]);
 
   return null;
 }
 
-function FloatingContactPopup({ contact, onClose }) {
-  if (!contact) return null;
+function OpenSelectedMarker({ selectedContact, drawerOpen, markerRefs }) {
+  const map = useMap();
 
+  useEffect(() => {
+    if (!selectedContact?.id) return;
+    if (selectedContact.lat == null || selectedContact.lng == null) return;
+
+    const marker = markerRefs.current[selectedContact.id];
+    if (!marker) return;
+
+    const timer = setTimeout(
+      () => {
+        map.setView(
+          [Number(selectedContact.lat), Number(selectedContact.lng)],
+          5,
+          { animate: true },
+        );
+
+        marker.openPopup();
+        map.invalidateSize();
+      },
+      drawerOpen ? 250 : 100,
+    );
+
+    return () => clearTimeout(timer);
+  }, [map, selectedContact, drawerOpen, markerRefs]);
+
+  return null;
+}
+
+function MarkerPopupContent({ contact, onEdit, onDelete, onViewMore }) {
   return (
-    <div className="floating-popup">
-      <button type="button" className="floating-popup-close" onClick={onClose}>
-        ×
-      </button>
+    <div className="marker-popup-compact">
+      <div className="mp-title">
+        <strong>{contact.nombre || "Sin nombre"}</strong>
+        <span>{contact.empresa || "-"}</span>
+      </div>
 
-      <div className="floating-popup-card">
-        <div className="popup-header">
-          <div className="popup-title-group">
-            <h3>{contact.nombre}</h3>
-            <p>{contact.empresa || "Sin empresa"}</p>
-          </div>
-        </div>
+      <div className="mp-meta">
+        <span>{contact.paises?.nombre || "-"}</span>
+        {contact.ciudades?.name && <span>· {contact.ciudades.name}</span>}
+      </div>
 
-        <div className="popup-chips">
-          {contact.paises?.continente && <span>{contact.paises.continente}</span>}
-          {contact.ciudad && <span>{contact.ciudad}</span>}
-          {contact.cargo && <span>{contact.cargo}</span>}
-        </div>
+      {contact.telefono && <div className="mp-phone">{contact.telefono}</div>}
 
-        <div className="popup-section">
-          <strong>Información principal</strong>
-          <p><b>País:</b> {contact.paises?.nombre || "-"}</p>
-          <p><b>Empresa:</b> {contact.empresa || "-"}</p>
-          <p><b>Cargo:</b> {contact.cargo || "-"}</p>
-          <p>
-            <b>Teléfono:</b>{" "}
-            {contact.paises?.codigo_telefono
-              ? `${contact.paises.codigo_telefono} `
-              : ""}
-            {contact.telefono || "-"}
-          </p>
-          <p><b>Email:</b> {contact.email || "-"}</p>
-        </div>
+      <div className="mp-actions">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewMore?.(contact);
+          }}
+        >
+          Ver más
+        </button>
 
-        <div className="popup-section">
-          <strong>Empleados asociados</strong>
-          {contact.empleados?.length > 0 ? (
-            <div className="popup-employees">
-              {contact.empleados.map((empleado) => (
-                <div key={empleado.id} className="popup-employee-card">
-                  <div className="popup-employee-name">{empleado.nombre}</div>
-                  <div className="popup-employee-role">
-                    {empleado.cargo || "Sin cargo"}
-                  </div>
-                  {empleado.telefono && <div>{empleado.telefono}</div>}
-                  {empleado.email && <div>{empleado.email}</div>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No hay empleados cargados.</p>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.(contact);
+          }}
+        >
+          ✎
+        </button>
+
+        <button
+          type="button"
+          className="danger"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.(contact);
+          }}
+        >
+          🗑
+        </button>
       </div>
     </div>
   );
 }
 
-export default function MapView({ contacts = [], drawerOpen = false }) {
-  const [selectedContact, setSelectedContact] = useState(null);
+export default function MapView({
+  contacts = [],
+  drawerOpen = false,
+  selectedContact = null,
+  onSelectContact,
+  onEditContact,
+  onDeleteContact,
+  onViewMore,
+}) {
+  const markerRefs = useRef({});
 
-  const validContacts = contacts.filter((contact) => {
-    const lat = contact?.paises?.lat;
-    const lng = contact?.paises?.lng;
-
-    return lat !== null && lat !== undefined && lng !== null && lng !== undefined;
-  });
+  const validContacts = useMemo(
+    () =>
+      contacts.filter(
+        (contact) => contact?.lat != null && contact?.lng != null,
+      ),
+    [contacts],
+  );
 
   return (
-    <>
-      <MapContainer
-        center={[15, -35]}
-        zoom={3}
-        minZoom={3}
-        maxZoom={10}
-        maxBounds={[
-          [-70, -180],
-          [85, 180],
-        ]}
-        maxBoundsViscosity={1.0}
-        worldCopyJump={true}
-        zoomControl={false}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <ResizeMapOnLayoutChange trigger={drawerOpen} />
-        <FitBoundsToContacts contacts={validContacts} drawerOpen={drawerOpen} />
-
-        {validContacts.map((contact) => (
-          <Marker
-            key={contact.id}
-            position={[
-              Number(contact.paises.lat),
-              Number(contact.paises.lng),
-            ]}
-            eventHandlers={{
-              click: () => {
-                setSelectedContact(contact);
-              },
-            }}
-          />
-        ))}
-      </MapContainer>
-
-      <FloatingContactPopup
-        contact={selectedContact}
-        onClose={() => setSelectedContact(null)}
+    <MapContainer
+      center={[15, -35]}
+      zoom={3}
+      minZoom={3}
+      maxZoom={10}
+      maxBounds={[
+        [-70, -180],
+        [85, 180],
+      ]}
+      maxBoundsViscosity={1.0}
+      worldCopyJump
+      zoomControl={false}
+      className="leaflet-map"
+      style={{ height: "100%", width: "100%" }}
+    >
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-    </>
+
+      <ResizeMapOnLayoutChange trigger={drawerOpen} />
+      <FitBoundsToContacts
+        contacts={validContacts}
+        drawerOpen={drawerOpen}
+        selectedContact={selectedContact}
+      />
+      <OpenSelectedMarker
+        selectedContact={selectedContact}
+        drawerOpen={drawerOpen}
+        markerRefs={markerRefs}
+      />
+
+      {validContacts.map((contact) => (
+        <Marker
+          key={contact.id}
+          position={[Number(contact.lat), Number(contact.lng)]}
+          icon={markerIcon}
+          ref={(ref) => {
+            if (ref) {
+              markerRefs.current[contact.id] = ref;
+            }
+          }}
+          eventHandlers={{
+            click: () => {
+              onSelectContact?.(contact);
+            },
+          }}
+        >
+          <Popup className="marker-popup-shell" autoPan closeButton>
+            <MarkerPopupContent
+              contact={contact}
+              onEdit={onEditContact}
+              onDelete={onDeleteContact}
+              onViewMore={onViewMore}
+            />
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
   );
 }

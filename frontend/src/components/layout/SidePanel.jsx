@@ -1,44 +1,40 @@
-import { Box, IconButton, Stack, Typography, Avatar } from "@mui/material";
+import { Box, IconButton, Stack, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import PlaceIcon from "@mui/icons-material/Place";
 
 export default function SidePanel({
-  open,
-  title = "Mapa de contactos",
-  subtitle = "Directorio internacional",
+  open = false,
   onClose,
+  title,
+  subtitle,
   children,
 }) {
   return (
-    <>
-      <Box className={`side-panel ${open ? "side-panel--open" : ""}`}>
-        <Box className="side-panel-header">
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Avatar className="drawer-avatar">
-                <PlaceIcon />
-              </Avatar>
+    <Box className={`side-panel ${open ? "open" : ""}`}>
+      <Box className="side-panel-header">
+        <Box className="side-panel-header-glow" />
 
-              <Box>
-                <Typography className="drawer-title">{title}</Typography>
-                <Typography variant="body2" className="drawer-subtitle">
-                  {subtitle}
-                </Typography>
-              </Box>
-            </Stack>
+        <Stack spacing={0.6} className="side-panel-header-content">
+          <Typography className="side-panel-title">
+            {title}
+          </Typography>
 
-            <IconButton onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          </Stack>
-        </Box>
+          {subtitle ? (
+            <Typography className="side-panel-subtitle">
+              {subtitle}
+            </Typography>
+          ) : null}
+        </Stack>
 
-        <Box className="side-panel-body">{children}</Box>
+        <IconButton className="side-panel-close" onClick={onClose}>
+          <CloseIcon />
+        </IconButton>
       </Box>
-    </>
+
+      <Box className="side-panel-content">
+        <Box className="side-panel-inner">
+          {children}
+        </Box>
+      </Box>
+    </Box>
   );
 }
