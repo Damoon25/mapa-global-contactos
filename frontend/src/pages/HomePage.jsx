@@ -4,6 +4,7 @@ import FullScreenLoader from "../components/common/FullScreenLoader";
 import ImportResultsDialog from "../components/common/ImportResultsDialog";
 import AgendaPanel from "../components/panels/AgendaPanel";
 import AddMeetingDialog from "../components/panels/AddMeetingDialog";
+import UpcomingMeetingNotifier from "../components/panels/UpcomingMeetingNotifier";
 import {
   getMeetings,
   createMeeting,
@@ -73,6 +74,8 @@ export default function HomePage() {
   const [countries, setCountries] = useState([]);
 
   const [meetings, setMeetings] = useState([]);
+  const [meetingNotification, setMeetingNotification] = useState(null);
+  const [meetingNotificationOpen, setMeetingNotificationOpen] = useState(false);
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
   const [savingMeeting, setSavingMeeting] = useState(false);
   const [meetingDialogMode, setMeetingDialogMode] = useState("create");
@@ -182,6 +185,12 @@ export default function HomePage() {
     loadingProfile,
     session,
   ]);
+
+  useEffect(() => {
+    if (meetingNotification) {
+      setMeetingNotificationOpen(true);
+    }
+  }, [meetingNotification]);
 
   useEffect(() => {
     if (!hasBootstrappedApp && !loadingSession && !loadingProfile) {
@@ -415,6 +424,11 @@ export default function HomePage() {
 
       return [...prev, contactId];
     });
+  };
+
+  const handleCloseMeetingNotification = (_, reason) => {
+    if (reason === "clickaway") return;
+    setMeetingNotificationOpen(false);
   };
 
   const handleClearSelection = () => {
@@ -738,8 +752,7 @@ export default function HomePage() {
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Acá vamos a mostrar métricas globales del mapa y de la actividad
-            reciente.
+            Acá se muestran estadísticas generales sobre tus contactos.
           </Typography>
 
           <Stack spacing={1.5}>
@@ -1575,6 +1588,15 @@ export default function HomePage() {
           {feedback.message}
         </Alert>
       </Snackbar>
+
+      <UpcomingMeetingNotifier
+        meetings={meetings}
+        enabled={hasBootstrappedApp}
+        open={meetingNotificationOpen}
+        onClose={handleCloseMeetingNotification}
+        notification={meetingNotification}
+        setNotification={setMeetingNotification}
+      />
 
       <ImportResultsDialog
         open={importDetailsOpen}
