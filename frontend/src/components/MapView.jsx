@@ -10,6 +10,7 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -369,6 +370,9 @@ export default function MapView({
 }) {
   const markerRefs = useRef({});
 
+  const isMobile = useMediaQuery("(max-width:768px)");
+  const initialZoom = isMobile ? 1.5 : 3;
+
   const validContacts = useMemo(
     () =>
       contacts.filter(
@@ -380,8 +384,8 @@ export default function MapView({
   return (
     <MapContainer
       center={[20, 0]}
-      zoom={3}
-      minZoom={3}
+      zoom={initialZoom}
+      minZoom={1.5}
       maxZoom={12}
       maxBounds={[
         [-70, -180],
