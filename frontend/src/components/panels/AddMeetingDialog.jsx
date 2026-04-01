@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import {
   Autocomplete,
   Box,
@@ -13,6 +14,7 @@ import {
 } from "@mui/material";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
+import dayjs from "dayjs";
 
 const createInitialForm = () => ({
   contacto: null,
@@ -32,6 +34,14 @@ function toDatetimeLocalValue(value) {
   const localDate = new Date(date.getTime() - offset * 60 * 1000);
 
   return localDate.toISOString().slice(0, 16);
+}
+
+function toDayjsValue(value) {
+  return value ? dayjs(value) : null;
+}
+
+function toIsoStringValue(value) {
+  return value ? value.toISOString() : "";
 }
 
 export default function AddMeetingDialog({
@@ -263,26 +273,58 @@ export default function AddMeetingDialog({
                 Fecha y horario
               </Typography>
 
-              <TextField
+              <DateTimePicker
                 label="Fecha de inicio"
-                type="datetime-local"
-                value={form.fecha_inicio}
-                onChange={handleChange("fecha_inicio")}
-                error={Boolean(errors.fecha_inicio)}
-                helperText={errors.fecha_inicio}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
+                value={toDayjsValue(form.fecha_inicio)}
+                onChange={(value) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    fecha_inicio: toIsoStringValue(value),
+                  }));
+
+                  if (errors.fecha_inicio) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      fecha_inicio: "",
+                    }));
+                  }
+                }}
+                ampm={false}
+                format="DD/MM/YYYY HH:mm"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: Boolean(errors.fecha_inicio),
+                    helperText: errors.fecha_inicio,
+                  },
+                }}
               />
 
-              <TextField
+              <DateTimePicker
                 label="Fecha de fin"
-                type="datetime-local"
-                value={form.fecha_fin}
-                onChange={handleChange("fecha_fin")}
-                error={Boolean(errors.fecha_fin)}
-                helperText={errors.fecha_fin}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
+                value={toDayjsValue(form.fecha_fin)}
+                onChange={(value) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    fecha_fin: value ? toIsoStringValue(value) : "",
+                  }));
+
+                  if (errors.fecha_fin) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      fecha_fin: "",
+                    }));
+                  }
+                }}
+                ampm={false}
+                format="DD/MM/YYYY HH:mm"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: Boolean(errors.fecha_fin),
+                    helperText: errors.fecha_fin,
+                  },
+                }}
               />
             </Stack>
           </Box>

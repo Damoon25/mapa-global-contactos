@@ -15,6 +15,8 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CloseIcon from "@mui/icons-material/Close";
+import CallOutlinedIcon from "@mui/icons-material/CallOutlined";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import "leaflet/dist/leaflet.css";
 
 const markerIcon = new L.Icon({
@@ -96,8 +98,7 @@ function OpenSelectedMarker({ selectedContact, drawerOpen, markerRefs }) {
         const zoom = 5;
 
         const point = map.project(latLng, zoom);
-
-        const offsetY = 220; // 🔥 ajustá esto
+        const offsetY = 220;
 
         const newPoint = L.point(point.x, point.y - offsetY);
         const newLatLng = map.unproject(newPoint, zoom);
@@ -121,6 +122,38 @@ function OpenSelectedMarker({ selectedContact, drawerOpen, markerRefs }) {
   return null;
 }
 
+function sanitizePhone(phone) {
+  if (!phone) return "";
+  return String(phone).replace(/[^\d+]/g, "");
+}
+
+function normalizeWhatsAppPhone(phone) {
+  if (!phone) return "";
+  return String(phone).replace(/\D/g, "");
+}
+
+function MarkerPopupActionButton({
+  title,
+  onClick,
+  disabled = false,
+  className = "",
+  children,
+}) {
+  return (
+    <Tooltip title={disabled ? `${title} no disponible` : title}>
+      <span>
+        <IconButton
+          onClick={disabled ? undefined : onClick}
+          disabled={disabled}
+          className={`marker-popup-icon-btn ${className}`.trim()}
+        >
+          {children}
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+}
+
 function MarkerPopupContent({
   contact,
   onEdit,
@@ -129,6 +162,12 @@ function MarkerPopupContent({
   onClose,
 }) {
   const initial = (contact.nombre || "?").charAt(0).toUpperCase();
+
+  const phoneHref = sanitizePhone(contact.telefono);
+  const whatsappPhone = normalizeWhatsAppPhone(contact.telefono);
+
+  const hasCallablePhone = Boolean(phoneHref);
+  const hasWhatsAppPhone = Boolean(whatsappPhone);
 
   return (
     <Box
@@ -250,72 +289,69 @@ function MarkerPopupContent({
           spacing={1}
           justifyContent="center"
           alignItems="center"
+          flexWrap="wrap"
+          useFlexGap
         >
-          <Tooltip title="Ver más">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewMore?.(contact);
-              }}
-              sx={{
-                width: 40,
-                height: 40,
-                border: "1px solid #bfdbfe",
-                color: "#2563eb",
-                bgcolor: "#eff6ff",
-                "&:hover": {
-                  bgcolor: "#dbeafe",
-                  transition: "all 0.18s ease",
-                },
-              }}
-            >
-              <VisibilityOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
+          <MarkerPopupActionButton
+            title="Ver más"
+            onClick={(e) => {
+              e?.stopPropagation?.();
+              onViewMore?.(contact);
+            }}
+            className="marker-popup-icon-btn--view"
+          >
+            <VisibilityOutlinedIcon sx={{ fontSize: 20 }} />
+          </MarkerPopupActionButton>
 
-          <Tooltip title="Editar">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(contact);
-              }}
-              sx={{
-                width: 40,
-                height: 40,
-                border: "1px solid #d1d5db",
-                color: "#374151",
-                bgcolor: "#ffffff",
-                "&:hover": {
-                  bgcolor: "#f9fafb",
-                  transition: "all 0.18s ease",
-                },
-              }}
-            >
-              <EditOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
+          <MarkerPopupActionButton
+            title="Llamar"
+            disabled={!hasCallablePhone}
+            onClick={(e) => {
+              e?.stopPropagation?.();
+              window.open(`tel:${phoneHref}`, "_self");
+            }}
+            className="marker-popup-icon-btn--call"
+          >
+            <CallOutlinedIcon sx={{ fontSize: 20 }} />
+          </MarkerPopupActionButton>
 
-          <Tooltip title="Eliminar">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.(contact);
-              }}
-              sx={{
-                width: 40,
-                height: 40,
-                border: "1px solid #fecaca",
-                color: "#dc2626",
-                bgcolor: "#fff5f5",
-                "&:hover": {
-                  bgcolor: "#fee2e2",
-                  transition: "all 0.18s ease",
-                },
-              }}
-            >
-              <DeleteOutlineIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
+          <MarkerPopupActionButton
+            title="WhatsApp"
+            disabled={!hasWhatsAppPhone}
+            onClick={(e) => {
+              e?.stopPropagation?.();
+              window.open(
+                `https://wa.me/${whatsappPhone}`,
+                "_blank",
+                "noopener,noreferrer",
+              );
+            }}
+            className="marker-popup-icon-btn--whatsapp"
+          >
+            <WhatsAppIcon sx={{ fontSize: 20 }} />
+          </MarkerPopupActionButton>
+
+          <MarkerPopupActionButton
+            title="Editar"
+            onClick={(e) => {
+              e?.stopPropagation?.();
+              onEdit?.(contact);
+            }}
+            className="marker-popup-icon-btn--edit"
+          >
+            <EditOutlinedIcon sx={{ fontSize: 20 }} />
+          </MarkerPopupActionButton>
+
+          <MarkerPopupActionButton
+            title="Eliminar"
+            onClick={(e) => {
+              e?.stopPropagation?.();
+              onDelete?.(contact);
+            }}
+            className="marker-popup-icon-btn--danger"
+          >
+            <DeleteOutlineIcon sx={{ fontSize: 20 }} />
+          </MarkerPopupActionButton>
         </Stack>
       </Stack>
     </Box>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import {
@@ -29,8 +29,17 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const INITIAL_VISIBLE_MEETINGS = 5;
 
+function parseDate(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatMeetingDate(dateString) {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
+
+  if (!date) return "Fecha inválida";
 
   return new Intl.DateTimeFormat("es-AR", {
     day: "2-digit",
@@ -42,28 +51,54 @@ function formatMeetingDate(dateString) {
 }
 
 function formatDateKey(dateValue) {
-  const date = new Date(dateValue);
+  const date = parseDate(dateValue);
+
+  if (!date) return "";
+
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
 function formatShortDate(dateValue) {
+  const date = parseDate(dateValue);
+
+  if (!date) return "Fecha inválida";
+
   return new Intl.DateTimeFormat("es-AR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  }).format(new Date(dateValue));
+  }).format(date);
 }
 
-function isUpcoming(dateString) {
-  const now = new Date();
-  const meetingDate = new Date(dateString);
-  const diffMs = meetingDate - now;
+function isMeetingStillActive(meeting, currentTime) {
+  if (!currentTime) return true;
+
+  const start = parseDate(meeting?.fecha);
+  if (!start) return false;
+
+  const end = parseDate(meeting?.fechaFin) || start;
+  return end.getTime() >= currentTime;
+}
+
+function isUpcomingWithin7Days(meeting, currentTime) {
+  if (!currentTime) return false;
+
+  const start = parseDate(meeting?.fecha);
+  if (!start) return false;
+
+  const end = parseDate(meeting?.fechaFin) || start;
+
+  const diffMs = start.getTime() - currentTime;
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-  return diffDays >= 0 && diffDays <= 7;
+  const stillActive = end.getTime() >= currentTime;
+  const within7Days = diffMs >= 0 && diffDays <= 7;
+
+  return stillActive && within7Days;
 }
 
 export default function AgendaPanel({
@@ -80,6 +115,19 @@ export default function AgendaPanel({
   const [visibleMeetingsCount, setVisibleMeetingsCount] = useState(
     INITIAL_VISIBLE_MEETINGS,
   );
+  const [currentTime, setCurrentTime] = useState(0);
+
+  useEffect(() => {
+    const updateCurrentTime = () => {
+      setCurrentTime(Date.now());
+    };
+
+    updateCurrentTime();
+
+    const interval = setInterval(updateCurrentTime, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const todayKey = formatDateKey(new Date());
 
@@ -87,11 +135,9 @@ export default function AgendaPanel({
     return meetings
       .map((meeting) => {
         const contact = meeting.contactos;
-        const startDate = meeting.fecha_inicio
-          ? new Date(meeting.fecha_inicio)
-          : null;
+        const startDate = parseDate(meeting.fecha_inicio);
 
-        return startDate && !Number.isNaN(startDate.getTime())
+        return startDate
           ? {
               id: meeting.id,
               contacto_id: meeting.contacto_id,
@@ -147,14 +193,24 @@ export default function AgendaPanel({
   }, [filteredMeetings]);
 
   const selectedDateKey = formatDateKey(selectedDate);
-  const selectedDayMeetings = meetingsByDate[selectedDateKey] || [];
-  const todayMeetings = meetingsByDate[todayKey] || [];
   const calendarDraftDateKey = formatDateKey(calendarDraftDate);
-  const calendarDraftMeetings = meetingsByDate[calendarDraftDateKey] || [];
+
+  const selectedDayMeetings = (meetingsByDate[selectedDateKey] || []).filter(
+    (meeting) => isMeetingStillActive(meeting, currentTime),
+  );
+
+  const todayMeetings = (meetingsByDate[todayKey] || []).filter((meeting) =>
+    isMeetingStillActive(meeting, currentTime),
+  );
+
+  const calendarDraftMeetings = (
+    meetingsByDate[calendarDraftDateKey] || []
+  ).filter((meeting) => isMeetingStillActive(meeting, currentTime));
+
   const calendarDraftDateLabel = formatShortDate(calendarDraftDate);
 
   const upcomingCount = filteredMeetings.filter((meeting) =>
-    isUpcoming(meeting.fecha),
+    isUpcomingWithin7Days(meeting, currentTime),
   ).length;
 
   const selectedDateLabel = formatShortDate(selectedDate);
@@ -176,13 +232,13 @@ export default function AgendaPanel({
   };
 
   const renderMeetingCard = (meeting, compact = false) => {
+    const active = isMeetingStillActive(meeting, currentTime);
+
     return (
       <Card
         key={`${compact ? "mini" : "full"}-${meeting.id}`}
         className={`agenda-meeting-card ${
-          isUpcoming(meeting.fecha)
-            ? "agenda-meeting-card--upcoming"
-            : "agenda-meeting-card--past"
+          active ? "agenda-meeting-card--upcoming" : "agenda-meeting-card--past"
         } ${compact ? "agenda-meeting-card--mini" : ""}`}
         sx={{
           borderRadius: 3,
@@ -234,8 +290,8 @@ export default function AgendaPanel({
 
               <Chip
                 size="small"
-                label={isUpcoming(meeting.fecha) ? "Próxima" : "Pasada"}
-                color={isUpcoming(meeting.fecha) ? "primary" : "default"}
+                label={active ? "Próxima" : "Pasada"}
+                color={active ? "primary" : "default"}
                 sx={{
                   borderRadius: 999,
                   fontWeight: 700,
@@ -411,6 +467,7 @@ export default function AgendaPanel({
             </Stack>
           </CardContent>
         </Card>
+
         {todayMeetings.length > 0 ? (
           <Alert
             severity="info"

@@ -2302,6 +2302,213 @@ body,
 }
 
 /* =========================
+   MARKER POPUP ACTIONS
+========================= */
+
+.marker-popup-icon-btn {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08) !important;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease !important;
+}
+
+.marker-popup-icon-btn:hover {
+  transform: translateY(-1px);
+  background: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12) !important;
+}
+
+.marker-popup-icon-btn.Mui-disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.marker-popup-icon-btn--view {
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+}
+
+.marker-popup-icon-btn--view:hover {
+  background: #dbeafe !important;
+}
+
+.marker-popup-icon-btn--call {
+  color: #0f766e !important;
+  border-color: rgba(153, 246, 228, 0.9) !important;
+  background: rgba(240, 253, 250, 0.96) !important;
+}
+
+.marker-popup-icon-btn--call:hover {
+  background: rgba(204, 251, 241, 0.96) !important;
+}
+
+.marker-popup-icon-btn--whatsapp {
+  color: #16a34a !important;
+  border-color: rgba(187, 247, 208, 0.95) !important;
+  background: rgba(240, 253, 244, 0.96) !important;
+}
+
+.marker-popup-icon-btn--whatsapp:hover {
+  background: rgba(220, 252, 231, 0.96) !important;
+}
+
+.marker-popup-icon-btn--edit {
+  color: #374151 !important;
+  border-color: #d1d5db !important;
+  background: #ffffff !important;
+}
+
+.marker-popup-icon-btn--edit:hover {
+  background: #f9fafb !important;
+}
+
+.marker-popup-icon-btn--danger {
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+  background: #fff5f5 !important;
+}
+
+.marker-popup-icon-btn--danger:hover {
+  background: #fee2e2 !important;
+}
+
+/* =========================
+   MUI X DATE TIME PICKER
+========================= */
+
+.app-dialog-paper .MuiPickersTextField-root,
+.app-dialog-paper .MuiDateTimePicker-root {
+  width: 100%;
+}
+
+.app-dialog-paper .MuiPickersInputBase-root,
+.app-dialog-paper .MuiOutlinedInput-root {
+  min-height: 54px;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+.app-dialog-paper .MuiPickersSectionList-root {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  font-size: 0.84rem !important;
+}
+
+.app-dialog-paper .MuiIconButton-root {
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.app-dialog-paper .MuiPickersLayout-root {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(59, 130, 246, 0.08),
+      transparent 26%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(248, 250, 252, 0.96) 100%
+    ) !important;
+}
+
+.MuiPickersPopper-paper,
+.MuiDialog-root .MuiPickersLayout-root {
+  border-radius: 24px !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow:
+    0 24px 50px rgba(15, 23, 42, 0.18),
+    0 10px 24px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden;
+}
+
+.MuipickerCalendar-root {
+  width: 80% !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.MuiPickersCalendarHeader-root {
+  padding: 14px 16px 6px !important;
+}
+
+.MuiPickersCalendarHeader-label {
+  font-weight: 800 !important;
+  color: #334155 !important;
+  font-size: 0.95rem !important;
+}
+
+.MuiDayCalendar-weekDayLabel {
+  color: #64748b !important;
+  font-weight: 700 !important;
+  font-size: 0.76rem !important;
+}
+
+.MuiPickersDay-root {
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.MuiPickersDay-root:hover {
+  background: rgba(219, 234, 254, 0.74) !important;
+}
+
+.MuiPickersDay-root.Mui-selected {
+  background: rgba(37, 99, 235, 0.14) !important;
+  color: #1d4ed8 !important;
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.22);
+}
+
+.MuiPickersDay-root.MuiPickersDay-today {
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+.MuiDigitalClock-root,
+.MuiMultiSectionDigitalClock-root,
+.MuiTimeClock-root {
+  border-left: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+
+.MuiMenuItem-root,
+.MuiDigitalClockItem-root {
+  border-radius: 12px !important;
+  margin: 2px 8px !important;
+  font-weight: 600 !important;
+}
+
+.MuiMenuItem-root.Mui-selected,
+.MuiDigitalClockItem-root.Mui-selected {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #1d4ed8 !important;
+}
+
+.MuiPickersActionBar-root {
+  padding: 12px 16px !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.MuiPickersActionBar-root .MuiButton-root {
+  border-radius: 999px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+}
+
+/* =========================
    GLOBAL SCROLLBARS
 ========================= */
 
@@ -2348,6 +2555,22 @@ body,
 
 *::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* =========================
+   MOBILE CALENDAR + DASHBOARD ACTIONS
+========================= */
+
+.mobile-panel-actions {
+  display: none;
+}
+
+/* =========================
+   MOBILE RECENTER FLOATING BUTTON
+========================= */
+
+.mobile-recenter-btn {
+  display: none !important;
 }
 
 /* =========================
@@ -2796,6 +3019,101 @@ body,
   .agenda-top-actions .agenda-calendar-open-btn {
     flex: 1 1 100%;
     justify-content: center;
+  }
+
+  /* =========================
+   MOBILE CALENDAR + DASHBOARD ACTIONS
+========================= */
+
+  .mobile-panel-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .mobile-panel-action-btn {
+    min-width: 0 !important;
+    height: 40px !important;
+    border-radius: 14px !important;
+    text-transform: none !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    justify-content: center !important;
+    white-space: nowrap;
+    padding: 0 12px !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08) !important;
+    backdrop-filter: blur(10px);
+  }
+
+  .mobile-panel-action-btn .MuiButton-startIcon {
+    margin-right: 6px !important;
+    margin-left: 0 !important;
+  }
+
+  .mobile-panel-action-btn .MuiSvgIcon-root {
+    font-size: 18px !important;
+  }
+
+  .mobile-panel-action-btn--calendar {
+    color: #2563eb !important;
+    border-color: rgba(59, 130, 246, 0.28) !important;
+    background: rgba(239, 246, 255, 0.94) !important;
+  }
+
+  .mobile-panel-action-btn--calendar:hover {
+    background: rgba(219, 234, 254, 0.98) !important;
+    border-color: rgba(59, 130, 246, 0.42) !important;
+  }
+
+  .mobile-panel-action-btn--dashboard {
+    color: #7c3aed !important;
+    border-color: rgba(167, 139, 250, 0.28) !important;
+    background: rgba(245, 243, 255, 0.96) !important;
+  }
+
+  .mobile-panel-action-btn--dashboard:hover {
+    background: rgba(237, 233, 254, 0.98) !important;
+    border-color: rgba(167, 139, 250, 0.42) !important;
+  }
+
+  .mini-sidebar-btn--recenter {
+    display: none !important;
+  }
+
+  .mobile-recenter-btn {
+    display: inline-flex !important;
+    position: fixed !important;
+    right: 16px;
+    bottom: 18px;
+    z-index: 1700;
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border: 1px solid rgba(226, 232, 240, 0.96) !important;
+    box-shadow:
+      0 16px 32px rgba(15, 23, 42, 0.16),
+      0 8px 18px rgba(15, 23, 42, 0.1) !important;
+    color: #2563eb !important;
+    backdrop-filter: blur(10px);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      background-color 0.18s ease !important;
+  }
+
+  .mobile-recenter-btn:hover {
+    transform: translateY(-1px);
+    background: #ffffff !important;
+    box-shadow:
+      0 20px 36px rgba(15, 23, 42, 0.18),
+      0 10px 22px rgba(15, 23, 42, 0.12) !important;
+  }
+
+  .mobile-recenter-btn .MuiSvgIcon-root {
+    font-size: 24px !important;
   }
 }
 

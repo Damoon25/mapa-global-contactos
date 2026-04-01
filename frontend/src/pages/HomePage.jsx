@@ -1265,6 +1265,28 @@ export default function HomePage() {
                       ))}
                     </Stack>
                   </Box>
+
+                  {isMobile ? (
+                    <Box className="mobile-panel-actions">
+                      <Button
+                        variant="outlined"
+                        startIcon={<CalendarMonthIcon />}
+                        onClick={openCalendarPanel}
+                        className="mobile-panel-action-btn mobile-panel-action-btn--calendar"
+                      >
+                        Calendario
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        startIcon={<InsightsOutlinedIcon />}
+                        onClick={openDashboardPanel}
+                        className="mobile-panel-action-btn mobile-panel-action-btn--dashboard"
+                      >
+                        Dashboard
+                      </Button>
+                    </Box>
+                  ) : null}
                 </Box>
 
                 <Box className="topbar-row topbar-row--actions">
@@ -1367,6 +1389,16 @@ export default function HomePage() {
             onViewMore={handleViewMore}
           />
         </Box>
+
+        {isMobile ? (
+          <IconButton
+            onClick={handleRecenterMap}
+            className="mobile-recenter-btn"
+            title="Recentrar mapa"
+          >
+            <MyLocationIcon />
+          </IconButton>
+        ) : null}
 
         <AddContactDialog
           open={openDialog}
