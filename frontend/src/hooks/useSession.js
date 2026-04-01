@@ -13,18 +13,35 @@ export default function useSession() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (active) {
-        setSession(session ?? null);
-        setLoadingSession(false);
-      }
+      if (!active) return;
+
+      setSession(session ?? null);
+      setLoadingSession(false);
     };
 
     loadSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session ?? null);
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+
+      setSession((prevSession) => {
+        const prevUserId = prevSession?.user?.id ?? null;
+        const nextUserId = nextSession?.user?.id ?? null;
+        const prevAccessToken = prevSession?.access_token ?? null;
+        const nextAccessToken = nextSession?.access_token ?? null;
+
+        if (
+          prevUserId === nextUserId &&
+          prevAccessToken === nextAccessToken
+        ) {
+          return prevSession;
+        }
+
+        return nextSession ?? null;
+      });
+
       setLoadingSession(false);
     });
 

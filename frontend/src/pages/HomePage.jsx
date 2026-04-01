@@ -2,6 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import SidePanel from "../components/layout/SidePanel";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 import ImportResultsDialog from "../components/common/ImportResultsDialog";
+import AgendaPanel from "../components/panels/AgendaPanel";
+import AddMeetingDialog from "../components/panels/AddMeetingDialog";
+import {
+  getMeetings,
+  createMeeting,
+  updateMeeting,
+  deleteMeeting,
+} from "../api/meetingsApi";
 import {
   getContacts,
   getCountries,
@@ -19,8 +27,12 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   CircularProgress,
+  Collapse,
+  Divider,
+  FormControlLabel,
   IconButton,
   Snackbar,
   Stack,
@@ -34,6 +46,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DownloadIcon from "@mui/icons-material/Download";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import MapView from "../components/MapView";
 import AddContactDialog from "../components/AddContactDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
@@ -47,10 +66,21 @@ const INITIAL_VISIBLE = 5;
 export default function HomePage() {
   const { session, loadingSession } = useSession();
   const { profile, loadingProfile } = useProfile(session?.user);
+  const [hasBootstrappedApp, setHasBootstrappedApp] = useState(false);
   const isMobile = useMediaQuery("(max-width:768px)");
 
   const [contacts, setContacts] = useState([]);
   const [countries, setCountries] = useState([]);
+
+  const [meetings, setMeetings] = useState([]);
+  const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
+  const [savingMeeting, setSavingMeeting] = useState(false);
+  const [meetingDialogMode, setMeetingDialogMode] = useState("create");
+  const [meetingToEdit, setMeetingToEdit] = useState(null);
+  const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const [deleteMeetingDialogOpen, setDeleteMeetingDialogOpen] = useState(false);
+  const [deletingMeeting, setDeletingMeeting] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -61,6 +91,7 @@ export default function HomePage() {
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [panelView, setPanelView] = useState("contacts");
   const [selectedContinent, setSelectedContinent] = useState("Todos");
   const [selectedContact, setSelectedContact] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -80,6 +111,20 @@ export default function HomePage() {
 
   const [visibleContactsCount, setVisibleContactsCount] =
     useState(INITIAL_VISIBLE);
+
+  const [advancedFilters, setAdvancedFilters] = useState({
+    country: "",
+    city: "",
+    company: "",
+    hasEmail: false,
+    hasPhone: false,
+  });
+
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [bulkToolsOpen, setBulkToolsOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedContactIds, setSelectedContactIds] = useState([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const loadContacts = useCallback(async () => {
     try {
@@ -113,14 +158,38 @@ export default function HomePage() {
     }
   }, []);
 
+  const loadMeetings = useCallback(async () => {
+    try {
+      const data = await getMeetings();
+      setMeetings(data);
+    } catch (error) {
+      console.error("Error loading meetings:", error);
+      setMeetings([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (!loadingSession && !loadingProfile && session?.user) {
       loadContacts();
       loadCountries();
+      loadMeetings();
     }
-  }, [loadContacts, loadCountries, loadingSession, loadingProfile, session]);
+  }, [
+    loadContacts,
+    loadCountries,
+    loadMeetings,
+    loadingSession,
+    loadingProfile,
+    session,
+  ]);
 
-  const filteredContacts = useMemo(() => {
+  useEffect(() => {
+    if (!hasBootstrappedApp && !loadingSession && !loadingProfile) {
+      setHasBootstrappedApp(true);
+    }
+  }, [hasBootstrappedApp, loadingSession, loadingProfile]);
+
+  const baseFilteredContacts = useMemo(() => {
     const text = searchText.trim().toLowerCase();
 
     return contacts.filter((contact) => {
@@ -142,6 +211,39 @@ export default function HomePage() {
     });
   }, [contacts, searchText, selectedContinent]);
 
+  const filteredContacts = useMemo(() => {
+    const country = advancedFilters.country.trim().toLowerCase();
+    const city = advancedFilters.city.trim().toLowerCase();
+    const company = advancedFilters.company.trim().toLowerCase();
+
+    return baseFilteredContacts.filter((contact) => {
+      const matchesCountry =
+        !country || contact.paises?.nombre?.toLowerCase().includes(country);
+
+      const matchesCity =
+        !city ||
+        contact.ciudades?.name?.toLowerCase().includes(city) ||
+        contact.provincias?.nombre?.toLowerCase().includes(city);
+
+      const matchesCompany =
+        !company || contact.empresa?.toLowerCase().includes(company);
+
+      const matchesEmail =
+        !advancedFilters.hasEmail || Boolean(contact.email?.trim());
+
+      const matchesPhone =
+        !advancedFilters.hasPhone || Boolean(contact.telefono?.trim());
+
+      return (
+        matchesCountry &&
+        matchesCity &&
+        matchesCompany &&
+        matchesEmail &&
+        matchesPhone
+      );
+    });
+  }, [baseFilteredContacts, advancedFilters]);
+
   useEffect(() => {
     if (
       selectedContact &&
@@ -152,8 +254,18 @@ export default function HomePage() {
   }, [filteredContacts, selectedContact]);
 
   useEffect(() => {
+    setSelectedContactIds((prev) =>
+      prev.filter((selectedId) =>
+        filteredContacts.some(
+          (contact) => String(contact.id) === String(selectedId),
+        ),
+      ),
+    );
+  }, [filteredContacts]);
+
+  useEffect(() => {
     setVisibleContactsCount(INITIAL_VISIBLE);
-  }, [searchText, selectedContinent]);
+  }, [searchText, selectedContinent, advancedFilters]);
 
   const visibleContacts = filteredContacts.slice(0, visibleContactsCount);
   const remainingContacts = Math.max(
@@ -188,12 +300,168 @@ export default function HomePage() {
     }));
   };
 
+  const handleAdvancedFilterChange = (field, value) => {
+    setAdvancedFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleClearAdvancedFilters = () => {
+    setAdvancedFilters({
+      country: "",
+      city: "",
+      company: "",
+      hasEmail: false,
+      hasPhone: false,
+    });
+  };
+
+  const handleToggleSelectionMode = () => {
+    setSelectionMode((prev) => {
+      const next = !prev;
+
+      if (!next) {
+        setSelectedContactIds([]);
+      }
+
+      return next;
+    });
+  };
+
+  const handleOpenCreateMeeting = () => {
+    setMeetingDialogMode("create");
+    setMeetingToEdit(null);
+    setMeetingDialogOpen(true);
+  };
+
+  const handleOpenEditMeeting = (meeting) => {
+    setMeetingDialogMode("edit");
+    setMeetingToEdit(meeting);
+    setMeetingDialogOpen(true);
+  };
+
+  const handleCloseCreateMeeting = () => {
+    if (savingMeeting) return;
+    setMeetingDialogOpen(false);
+    setMeetingToEdit(null);
+    setMeetingDialogMode("create");
+  };
+
+  const handleCreateMeeting = async (payload) => {
+    try {
+      setSavingMeeting(true);
+
+      if (meetingDialogMode === "edit" && meetingToEdit?.id) {
+        await updateMeeting(meetingToEdit.id, payload);
+        showFeedback("success", "La reunión se actualizó correctamente.");
+      } else {
+        await createMeeting(payload);
+        showFeedback("success", "La reunión se creó correctamente.");
+      }
+
+      await loadMeetings();
+
+      setMeetingDialogOpen(false);
+      setMeetingToEdit(null);
+      setMeetingDialogMode("create");
+    } catch (error) {
+      console.error("Error saving meeting:", error);
+      showFeedback("error", "No se pudo guardar la reunión.");
+    } finally {
+      setSavingMeeting(false);
+    }
+  };
+
+  const handleAskDeleteMeeting = (meeting) => {
+    setMeetingToDelete(meeting);
+    setDeleteMeetingDialogOpen(true);
+  };
+
+  const handleCloseDeleteMeetingDialog = () => {
+    if (deletingMeeting) return;
+    setDeleteMeetingDialogOpen(false);
+    setMeetingToDelete(null);
+  };
+
+  const handleConfirmDeleteMeeting = async () => {
+    if (!meetingToDelete?.id) return;
+
+    try {
+      setDeletingMeeting(true);
+
+      await deleteMeeting(meetingToDelete.id);
+      await loadMeetings();
+
+      setDeleteMeetingDialogOpen(false);
+      setMeetingToDelete(null);
+
+      showFeedback("success", "La reunión se eliminó correctamente.");
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+      showFeedback("error", "No se pudo eliminar la reunión.");
+    } finally {
+      setDeletingMeeting(false);
+    }
+  };
+
+  const handleToggleContactSelection = (contactId) => {
+    setSelectedContactIds((prev) => {
+      const exists = prev.some((id) => String(id) === String(contactId));
+
+      if (exists) {
+        return prev.filter((id) => String(id) !== String(contactId));
+      }
+
+      return [...prev, contactId];
+    });
+  };
+
+  const handleClearSelection = () => {
+    setSelectedContactIds([]);
+  };
+
+  const handleSelectAllFiltered = () => {
+    setSelectedContactIds(filteredContacts.map((contact) => contact.id));
+  };
+
   const togglePanel = () => {
-    setPanelOpen((prev) => !prev);
+    setPanelOpen((prev) => {
+      const next = !prev;
+
+      if (next) {
+        setPanelView("contacts");
+      }
+
+      return next;
+    });
   };
 
   const closePanel = () => {
     setPanelOpen(false);
+  };
+
+  const openContactsPanel = () => {
+    setPanelView("contacts");
+    setPanelOpen(true);
+  };
+
+  const openCalendarPanel = () => {
+    setPanelView("calendar");
+    setPanelOpen(true);
+
+    if (isMobile) {
+      setSelectedContact(null);
+    }
+  };
+
+  const openDashboardPanel = () => {
+    setPanelView("dashboard");
+    setPanelOpen(true);
+
+    if (isMobile) {
+      setSelectedContact(null);
+    }
   };
 
   const handleSelectContact = (contact) => {
@@ -293,6 +561,62 @@ export default function HomePage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedContactIds.length === 0) return;
+
+    try {
+      setBulkDeleting(true);
+
+      await Promise.all(
+        selectedContactIds.map((contactId) => deleteContact(contactId)),
+      );
+
+      setContacts((prev) =>
+        prev.filter(
+          (contact) =>
+            !selectedContactIds.some(
+              (selectedId) => String(selectedId) === String(contact.id),
+            ),
+        ),
+      );
+
+      if (
+        selectedContact &&
+        selectedContactIds.some(
+          (selectedId) => String(selectedId) === String(selectedContact.id),
+        )
+      ) {
+        setSelectedContact(null);
+      }
+
+      if (
+        detailContact &&
+        selectedContactIds.some(
+          (selectedId) => String(selectedId) === String(detailContact.id),
+        )
+      ) {
+        setDetailContact(null);
+      }
+
+      setSelectedContactIds([]);
+      setSelectionMode(false);
+      setBulkToolsOpen(false);
+
+      showFeedback(
+        "success",
+        `Se eliminaron ${selectedContactIds.length} contactos correctamente.`,
+      );
+    } catch (error) {
+      console.error("Error deleting contacts:", error);
+      showFeedback(
+        "error",
+        "No se pudieron eliminar los contactos seleccionados.",
+      );
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const handleCreateContact = async (formData) => {
     try {
       if (dialogMode === "edit" && contactToEdit?.id) {
@@ -387,6 +711,83 @@ export default function HomePage() {
     }
   };
 
+  const renderPanelContent = () => {
+    if (panelView === "calendar") {
+      return (
+        <AgendaPanel
+          meetings={meetings}
+          onOpenCreateMeeting={handleOpenCreateMeeting}
+          onEditMeeting={handleOpenEditMeeting}
+          onDeleteMeeting={handleAskDeleteMeeting}
+          onSelectContact={(contact) => {
+            setSelectedContact(contact);
+
+            if (isMobile) {
+              setPanelOpen(false);
+            }
+          }}
+        />
+      );
+    }
+
+    if (panelView === "dashboard") {
+      return (
+        <Stack spacing={2}>
+          <Typography variant="h6" fontWeight={700}>
+            Dashboard
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary">
+            Acá vamos a mostrar métricas globales del mapa y de la actividad
+            reciente.
+          </Typography>
+
+          <Stack spacing={1.5}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+              }}
+            >
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Total de contactos
+                </Typography>
+                <Typography variant="h4" fontWeight={800}>
+                  {contacts.length}
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+              }}
+            >
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Países visibles
+                </Typography>
+                <Typography variant="h4" fontWeight={800}>
+                  {
+                    new Set(
+                      filteredContacts
+                        .map((contact) => contact.paises?.nombre)
+                        .filter(Boolean),
+                    ).size
+                  }
+                </Typography>
+              </CardContent>
+            </Card>
+          </Stack>
+        </Stack>
+      );
+    }
+
+    return renderContactDetails();
+  };
+
   const renderContactDetails = () => {
     return (
       <Stack spacing={2}>
@@ -408,56 +809,290 @@ export default function HomePage() {
           Contactos encontrados ({filteredContacts.length})
         </Typography>
 
-        <Stack spacing={1.2} className="country-list">
-          {visibleContacts.map((contact) => (
-            <Card
-              key={contact.id}
-              className={`country-card ${
-                selectedContact?.id === contact.id ? "selected" : ""
-              }`}
-              onClick={() => handleSelectContact(contact)}
+        <Stack spacing={1.2}>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button
+              variant={filtersOpen ? "contained" : "outlined"}
+              startIcon={<FilterListIcon />}
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              sx={{
+                borderRadius: "12px",
+                textTransform: "none",
+                fontWeight: 700,
+              }}
             >
-              <CardContent
-                className="country-card-content"
-                sx={{ "&:last-child": { pb: 2 } }}
+              Filtros
+            </Button>
+
+            <Button
+              variant={bulkToolsOpen ? "contained" : "outlined"}
+              color={bulkToolsOpen ? "error" : "inherit"}
+              startIcon={<DeleteSweepIcon />}
+              onClick={() => setBulkToolsOpen((prev) => !prev)}
+              sx={{
+                borderRadius: "12px",
+                textTransform: "none",
+                fontWeight: 700,
+              }}
+            >
+              Borrar todo
+            </Button>
+          </Stack>
+
+          <Collapse in={filtersOpen}>
+            <Stack
+              spacing={1.2}
+              sx={{
+                p: 1.5,
+                borderRadius: "16px",
+                border: "1px solid rgba(226,232,240,0.95)",
+                bgcolor: "rgba(255,255,255,0.88)",
+                boxShadow: "0 10px 24px rgba(15,23,42,0.06)",
+              }}
+            >
+              <TextField
+                size="small"
+                label="País"
+                value={advancedFilters.country}
+                onChange={(e) =>
+                  handleAdvancedFilterChange("country", e.target.value)
+                }
+              />
+
+              <TextField
+                size="small"
+                label="Ciudad / Provincia"
+                value={advancedFilters.city}
+                onChange={(e) =>
+                  handleAdvancedFilterChange("city", e.target.value)
+                }
+              />
+
+              <TextField
+                size="small"
+                label="Empresa"
+                value={advancedFilters.company}
+                onChange={(e) =>
+                  handleAdvancedFilterChange("company", e.target.value)
+                }
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={advancedFilters.hasEmail}
+                    onChange={(e) =>
+                      handleAdvancedFilterChange("hasEmail", e.target.checked)
+                    }
+                  />
+                }
+                label="Solo contactos con email"
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={advancedFilters.hasPhone}
+                    onChange={(e) =>
+                      handleAdvancedFilterChange("hasPhone", e.target.checked)
+                    }
+                  />
+                }
+                label="Solo contactos con teléfono"
+              />
+
+              <Divider />
+
+              <Button
+                variant="text"
+                onClick={handleClearAdvancedFilters}
+                sx={{
+                  alignSelf: "flex-start",
+                  textTransform: "none",
+                  fontWeight: 700,
+                }}
               >
-                <Box className="country-card-top">
-                  <Box className="country-card-main">
-                    <Typography className="country-card-title">
-                      {contact.nombre}
-                    </Typography>
-                    <Typography className="country-card-subtitle">
-                      {contact.paises?.nombre || "-"} · {contact.empresa || "-"}
-                    </Typography>
-                  </Box>
+                Limpiar filtros
+              </Button>
+            </Stack>
+          </Collapse>
 
-                  <Box className="country-card-actions">
-                    <IconButton
-                      size="small"
-                      className="contact-action-btn"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleOpenEdit(contact);
+          <Collapse in={bulkToolsOpen}>
+            <Stack
+              spacing={1.2}
+              sx={{
+                p: 1.5,
+                borderRadius: "16px",
+                border: "1px solid rgba(254,226,226,0.95)",
+                bgcolor: "rgba(255,255,255,0.9)",
+                boxShadow: "0 10px 24px rgba(15,23,42,0.06)",
+              }}
+            >
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant={selectionMode ? "contained" : "outlined"}
+                  startIcon={<CheckBoxOutlinedIcon />}
+                  onClick={handleToggleSelectionMode}
+                  sx={{
+                    borderRadius: "12px",
+                    textTransform: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  {selectionMode ? "Cancelar selección" : "Seleccionar"}
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  startIcon={<DoneAllIcon />}
+                  onClick={handleSelectAllFiltered}
+                  disabled={!selectionMode || filteredContacts.length === 0}
+                  sx={{
+                    borderRadius: "12px",
+                    textTransform: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  Seleccionar todo
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<DeleteOutlineIcon />}
+                  onClick={handleBulkDelete}
+                  disabled={
+                    !selectionMode ||
+                    selectedContactIds.length === 0 ||
+                    bulkDeleting
+                  }
+                  sx={{
+                    borderRadius: "12px",
+                    textTransform: "none",
+                    fontWeight: 800,
+                  }}
+                >
+                  {bulkDeleting
+                    ? "Borrando..."
+                    : `Borrar (${selectedContactIds.length})`}
+                </Button>
+              </Stack>
+
+              {selectionMode ? (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                >
+                  <Chip
+                    label={`${selectedContactIds.length} seleccionados`}
+                    sx={{ fontWeight: 700 }}
+                  />
+
+                  {selectedContactIds.length > 0 ? (
+                    <Button
+                      variant="text"
+                      color="inherit"
+                      onClick={handleClearSelection}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 700,
                       }}
                     >
-                      ✎
-                    </IconButton>
+                      Limpiar selección
+                    </Button>
+                  ) : null}
+                </Stack>
+              ) : null}
+            </Stack>
+          </Collapse>
+        </Stack>
 
-                    <IconButton
-                      size="small"
-                      className="contact-action-btn contact-action-btn--danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleDeleteContact(contact);
-                      }}
-                    >
-                      🗑
-                    </IconButton>
+        <Stack spacing={1.2} className="country-list">
+          {visibleContacts.map((contact) => {
+            const isChecked = selectedContactIds.some(
+              (id) => String(id) === String(contact.id),
+            );
+
+            return (
+              <Card
+                key={contact.id}
+                className={`country-card ${
+                  selectedContact?.id === contact.id ? "selected" : ""
+                }`}
+                onClick={() => handleSelectContact(contact)}
+              >
+                <CardContent
+                  className="country-card-content"
+                  sx={{ "&:last-child": { pb: 2 } }}
+                >
+                  <Box className="country-card-top">
+                    {selectionMode ? (
+                      <Checkbox
+                        checked={isChecked}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() =>
+                          handleToggleContactSelection(contact.id)
+                        }
+                        sx={{ pt: 0.1, pr: 0.5 }}
+                      />
+                    ) : null}
+
+                    <Box className="country-card-main">
+                      <Typography className="country-card-title">
+                        {contact.nombre}
+                      </Typography>
+
+                      <Typography className="country-card-subtitle">
+                        {contact.paises?.nombre || "-"} ·{" "}
+                        {contact.empresa || "-"}
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          mt: 0.6,
+                          color: "#64748b",
+                          fontSize: "0.82rem",
+                        }}
+                      >
+                        {contact.ciudades?.name ||
+                          contact.provincias?.nombre ||
+                          "Sin ciudad"}{" "}
+                        · {contact.cargo || "Sin cargo"}
+                      </Typography>
+                    </Box>
+
+                    <Box className="country-card-actions">
+                      <IconButton
+                        size="small"
+                        className="contact-action-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleOpenEdit(contact);
+                        }}
+                      >
+                        ✎
+                      </IconButton>
+
+                      <IconButton
+                        size="small"
+                        className="contact-action-btn contact-action-btn--danger"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDeleteContact(contact);
+                        }}
+                      >
+                        🗑
+                      </IconButton>
+                    </Box>
                   </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
 
           {filteredContacts.length > INITIAL_VISIBLE && (
             <Stack spacing={0.8} sx={{ pt: 0.5 }}>
@@ -513,7 +1148,7 @@ export default function HomePage() {
     );
   };
 
-  if (loadingSession || loadingProfile) {
+  if (!hasBootstrappedApp && (loadingSession || loadingProfile)) {
     return (
       <FullScreenLoader
         title="Cargando sesión..."
@@ -527,8 +1162,28 @@ export default function HomePage() {
       <Box className="app-root">
         <Box className="mini-sidebar">
           <Stack spacing={1.2} alignItems="center">
-            <IconButton onClick={togglePanel} className="mini-sidebar-btn">
+            <IconButton
+              onClick={openContactsPanel}
+              className="mini-sidebar-btn"
+              title="Contactos"
+            >
               <MenuIcon />
+            </IconButton>
+
+            <IconButton
+              onClick={openCalendarPanel}
+              className="mini-sidebar-btn"
+              title="Calendario"
+            >
+              <CalendarMonthIcon />
+            </IconButton>
+
+            <IconButton
+              onClick={openDashboardPanel}
+              className="mini-sidebar-btn"
+              title="Dashboard"
+            >
+              <InsightsOutlinedIcon />
             </IconButton>
 
             <IconButton
@@ -670,10 +1325,22 @@ export default function HomePage() {
         <SidePanel
           open={panelOpen}
           onClose={closePanel}
-          title="Mapa de contactos"
-          subtitle="Directorio internacional"
+          title={
+            panelView === "calendar"
+              ? "Agenda global"
+              : panelView === "dashboard"
+                ? "Dashboard"
+                : "Mapa de contactos"
+          }
+          subtitle={
+            panelView === "calendar"
+              ? "Reuniones y cronograma"
+              : panelView === "dashboard"
+                ? "Métricas y actividad"
+                : "Directorio internacional"
+          }
         >
-          {renderContactDetails()}
+          {renderPanelContent()}
         </SidePanel>
 
         <Box className="map-container">
@@ -698,12 +1365,34 @@ export default function HomePage() {
           countries={countries}
         />
 
+        <AddMeetingDialog
+          open={meetingDialogOpen}
+          mode={meetingDialogMode}
+          initialData={meetingToEdit}
+          contacts={contacts}
+          loading={savingMeeting}
+          onClose={handleCloseCreateMeeting}
+          onSave={handleCreateMeeting}
+        />
+
         <ConfirmDeleteDialog
           open={deleteDialogOpen}
-          contact={contactToDelete}
+          title="Eliminar contacto"
+          message="Vas a eliminar este contacto junto con sus empleados asociados."
+          itemLabel={contactToDelete?.nombre || ""}
           loading={deleting}
           onClose={handleCloseDeleteDialog}
           onConfirm={handleConfirmDelete}
+        />
+
+        <ConfirmDeleteDialog
+          open={deleteMeetingDialogOpen}
+          title="Eliminar reunión"
+          message="Vas a eliminar esta reunión y no vas a poder recuperarla después."
+          itemLabel={meetingToDelete?.titulo || ""}
+          loading={deletingMeeting}
+          onClose={handleCloseDeleteMeetingDialog}
+          onConfirm={handleConfirmDeleteMeeting}
         />
 
         {detailContact && (

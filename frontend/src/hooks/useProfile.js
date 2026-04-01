@@ -1,14 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getProfile } from "../api/authApi";
 
 export default function useProfile(user) {
+    const userId = user?.id ?? null;
+
     const [profile, setProfile] = useState(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
 
+    const lastLoadedUserIdRef = useRef(null);
+
     useEffect(() => {
-        if (!user?.id) {
+        if (!userId) {
             setProfile(null);
             setLoadingProfile(false);
+            lastLoadedUserIdRef.current = null;
             return;
         }
 
@@ -16,11 +21,18 @@ export default function useProfile(user) {
 
         const loadProfile = async () => {
             try {
-                setLoadingProfile(true);
-                const data = await getProfile(user.id);
+                const isSameUserAlreadyLoaded =
+                    lastLoadedUserIdRef.current === userId && profile !== null;
+
+                if (!isSameUserAlreadyLoaded) {
+                    setLoadingProfile(true);
+                }
+
+                const data = await getProfile(userId);
 
                 if (active) {
                     setProfile(data);
+                    lastLoadedUserIdRef.current = userId;
                 }
             } catch (error) {
                 console.error("Profile load error:", error);
@@ -36,7 +48,8 @@ export default function useProfile(user) {
         return () => {
             active = false;
         };
-    }, [user]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId]);
 
     return { profile, loadingProfile };
 }

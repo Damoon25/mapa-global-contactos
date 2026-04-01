@@ -518,7 +518,12 @@ export default function AddContactDialog({
         </Stack>
       </Box>
 
-      <DialogContent sx={{ px: 3, py: 3 }}>
+      <DialogContent
+        sx={{
+          px: { xs: 2, sm: 3 },
+          py: 3,
+        }}
+      >
         <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={3}>
             <Paper
@@ -526,7 +531,7 @@ export default function AddContactDialog({
               className="contact-dialog-section"
               sx={{
                 borderRadius: 3,
-                p: 2.5,
+                p: { xs: 2, sm: 2.5 },
                 borderColor: "rgba(148,163,184,0.25)",
                 boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
               }}
@@ -539,8 +544,27 @@ export default function AddContactDialog({
                   </Typography>
                 </Stack>
 
-                <Grid container spacing={2} className="contact-dialog-grid">
-                  <Grid item xs={12} md={3}>
+                <Box
+                  className="contact-dialog-grid"
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "1fr",
+                      md: "repeat(3, minmax(0, 1fr))",
+                    },
+                    gap: 2,
+                    alignItems: "start",
+                    width: "100%",
+                    maxWidth: "100%",
+                    mx: "auto",
+                    "& > *": {
+                      minWidth: 0,
+                      width: "100%",
+                    },
+                  }}
+                >
+                  <Box>
                     <Autocomplete
                       options={countries || []}
                       value={selectedCountry}
@@ -573,6 +597,7 @@ export default function AddContactDialog({
                       renderInput={(params) => (
                         <TextField
                           {...params}
+                          fullWidth
                           label="País"
                           error={Boolean(errors.pais_id)}
                           helperText={
@@ -594,10 +619,10 @@ export default function AddContactDialog({
                         />
                       )}
                     />
-                  </Grid>
+                  </Box>
 
                   {isArgentinaSelected && (
-                    <Grid item xs={12} md={3}>
+                    <Box>
                       <Autocomplete
                         options={provinces || []}
                         value={selectedProvince}
@@ -610,15 +635,16 @@ export default function AddContactDialog({
                         renderInput={(params) => (
                           <TextField
                             {...params}
+                            fullWidth
                             label="Provincia"
                             placeholder="Seleccioná una provincia"
                           />
                         )}
                       />
-                    </Grid>
+                    </Box>
                   )}
 
-                  <Grid item xs={12} md={isArgentinaSelected ? 3 : 4}>
+                  <Box>
                     <Autocomplete
                       options={cities || []}
                       value={selectedCity}
@@ -642,6 +668,7 @@ export default function AddContactDialog({
                       renderInput={(params) => (
                         <TextField
                           {...params}
+                          fullWidth
                           label="Ciudad"
                           placeholder="Seleccioná una ciudad"
                           error={Boolean(errors.ciudad)}
@@ -661,9 +688,9 @@ export default function AddContactDialog({
                         />
                       )}
                     />
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} md={isArgentinaSelected ? 3 : 4}>
+                  <Box>
                     <TextField
                       fullWidth
                       label="Nombre"
@@ -681,9 +708,9 @@ export default function AddContactDialog({
                         ),
                       }}
                     />
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} md={4}>
+                  <Box>
                     <TextField
                       fullWidth
                       label="Cargo"
@@ -699,9 +726,9 @@ export default function AddContactDialog({
                         ),
                       }}
                     />
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} md={4}>
+                  <Box>
                     <TextField
                       fullWidth
                       label="Empresa"
@@ -709,9 +736,9 @@ export default function AddContactDialog({
                       onChange={handleChange("empresa")}
                       placeholder="Ej. Empresa SA"
                     />
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} md={4}>
+                  <Box>
                     <TextField
                       fullWidth
                       label="Dirección"
@@ -727,9 +754,9 @@ export default function AddContactDialog({
                         ),
                       }}
                     />
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} md={6}>
+                  <Box>
                     <TextField
                       fullWidth
                       label="Teléfono"
@@ -752,9 +779,9 @@ export default function AddContactDialog({
                         ),
                       }}
                     />
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} md={6}>
+                  <Box>
                     <TextField
                       fullWidth
                       label="Email"
@@ -801,16 +828,14 @@ export default function AddContactDialog({
                         </MenuItem>
                       ))}
                     </Menu>
-                  </Grid>
+                  </Box>
+                </Box>
 
-                  {errors.ubicacion && (
-                    <Grid item xs={12}>
-                      <Typography variant="body2" color="error">
-                        {errors.ubicacion}
-                      </Typography>
-                    </Grid>
-                  )}
-                </Grid>
+                {errors.ubicacion && (
+                  <Typography variant="body2" color="error">
+                    {errors.ubicacion}
+                  </Typography>
+                )}
               </Stack>
             </Paper>
 

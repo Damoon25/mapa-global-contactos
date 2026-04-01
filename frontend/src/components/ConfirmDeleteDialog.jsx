@@ -1,5 +1,6 @@
 import {
   Alert,
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -12,7 +13,9 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 export default function ConfirmDeleteDialog({
   open,
-  contact = null,
+  title = "Eliminar registro",
+  message = "Esta acción no se puede deshacer.",
+  itemLabel = "",
   loading = false,
   onClose,
   onConfirm,
@@ -24,40 +27,55 @@ export default function ConfirmDeleteDialog({
       fullWidth
       maxWidth="xs"
       PaperProps={{
-        sx: {
-          borderRadius: 4,
-        },
+        className: "app-dialog-paper danger-dialog-paper",
       }}
     >
-      <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
-        <DeleteOutlineIcon color="error" />
-        Eliminar contacto
-      </DialogTitle>
+      <Box className="app-dialog-header danger-dialog-header">
+        <Box className="danger-dialog-icon-wrap">
+          <DeleteOutlineIcon className="danger-dialog-icon" />
+        </Box>
 
-      <DialogContent sx={{ pt: 1 }}>
+        <DialogTitle className="danger-dialog-title">
+          {title}
+        </DialogTitle>
+
+        <Typography className="danger-dialog-subtitle">
+          Confirmá solo si realmente querés continuar.
+        </Typography>
+      </Box>
+
+      <DialogContent className="danger-dialog-content">
         <Stack spacing={2}>
-          <Typography variant="body1">
-            {contact?.nombre ? (
-              <>
-                Vas a eliminar a <strong>{contact.nombre}</strong>.
-              </>
-            ) : (
-              "Vas a eliminar este contacto."
-            )}
+          <Typography className="danger-dialog-message">
+            {message}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            Esta acción eliminará también los empleados asociados y no se puede deshacer.
-          </Typography>
+          {itemLabel ? (
+            <Box className="danger-dialog-highlight">
+              <Typography className="danger-dialog-highlight-label">
+                Elemento afectado
+              </Typography>
+              <Typography className="danger-dialog-highlight-value">
+                {itemLabel}
+              </Typography>
+            </Box>
+          ) : null}
 
-          <Alert severity="warning" sx={{ borderRadius: 2 }}>
-            Confirmá solo si realmente querés borrar este registro.
+          <Alert
+            severity="warning"
+            className="danger-dialog-alert"
+          >
+            Esta acción es permanente y no se puede deshacer.
           </Alert>
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, justifyContent: "space-between" }}>
-        <Button onClick={onClose} disabled={loading} sx={{ borderRadius: 999 }}>
+      <DialogActions className="app-dialog-footer danger-dialog-footer">
+        <Button
+          onClick={onClose}
+          disabled={loading}
+          className="app-dialog-cancel-btn"
+        >
           Cancelar
         </Button>
 
@@ -66,7 +84,7 @@ export default function ConfirmDeleteDialog({
           color="error"
           onClick={onConfirm}
           disabled={loading}
-          sx={{ borderRadius: 999, px: 3 }}
+          className="danger-dialog-submit-btn"
         >
           {loading ? "Eliminando..." : "Eliminar"}
         </Button>
