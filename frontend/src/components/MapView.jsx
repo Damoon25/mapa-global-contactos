@@ -371,7 +371,7 @@ export default function MapView({
   const markerRefs = useRef({});
 
   const isMobile = useMediaQuery("(max-width:768px)");
-  const initialZoom = isMobile ? 1.2 : 3;
+  const initialZoom = isMobile ? 1.5 : 3;
 
   const validContacts = useMemo(
     () =>
@@ -385,7 +385,7 @@ export default function MapView({
     <MapContainer
       center={[20, 0]}
       zoom={initialZoom}
-      minZoom={1.2}
+      minZoom={1.5}
       maxZoom={12}
       maxBounds={[
         [-70, -180],
