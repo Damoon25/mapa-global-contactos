@@ -17,10 +17,20 @@ export default function ProtectedRoute({ children }) {
 
       try {
         const authorizedUser = await getAuthorizedUser(
-          session.user.email.trim().toLowerCase()
+          session.user.email.trim().toLowerCase(),
         );
 
-        setIsAuthorized(!!authorizedUser);
+        if (!authorizedUser) {
+          setIsAuthorized("pending");
+          return;
+        }
+
+        if (!authorizedUser.activo) {
+          setIsAuthorized("pending");
+          return;
+        }
+
+        setIsAuthorized(true);
       } catch (error) {
         console.error("Authorization check error:", error);
         await signOut();
@@ -42,7 +52,15 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  if (!session || !isAuthorized) {
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (isAuthorized === "pending") {
+    return <Navigate to="/pending" replace />;
+  }
+
+  if (!isAuthorized) {
     return <Navigate to="/login" replace />;
   }
 

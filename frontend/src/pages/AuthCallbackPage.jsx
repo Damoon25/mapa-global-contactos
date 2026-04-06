@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import {
   getCurrentUser,
@@ -21,13 +22,32 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        const authorizedUser = await getAuthorizedUser(
-          user.email.trim().toLowerCase()
-        );
+        const normalizedEmail = user.email.trim().toLowerCase();
+
+        const authorizedUser = await getAuthorizedUser(normalizedEmail);
 
         if (!authorizedUser) {
-          await signOut();
-          navigate("/login", { replace: true });
+          const { error } = await supabase
+            .from("usuarios_autorizados")
+            .upsert(
+              {
+                email: normalizedEmail,
+                tipo_mapa: "global",
+                activo: false,
+              },
+              { onConflict: "email" },
+            );
+
+          if (error) {
+            console.error("Error creating pending authorized user:", error);
+          }
+
+          navigate("/pending", { replace: true });
+          return;
+        }
+
+        if (!authorizedUser.activo) {
+          navigate("/pending", { replace: true });
           return;
         }
 

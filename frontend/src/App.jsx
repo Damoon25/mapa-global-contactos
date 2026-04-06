@@ -5,6 +5,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
+import PendingPage from "./pages/PendingPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
 
@@ -22,14 +23,9 @@ function App() {
             }
           />
 
-          <Route
-            path="/auth/callback"
-            element={
-              <PublicOnlyRoute>
-                <AuthCallbackPage />
-              </PublicOnlyRoute>
-            }
-          />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+          <Route path="/pending" element={<PendingPage />} />
 
           <Route
             path="/"
