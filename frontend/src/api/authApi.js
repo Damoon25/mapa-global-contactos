@@ -38,12 +38,73 @@ export const getProfile = async (userId) => {
   return data;
 };
 
-export const getAuthorizedUser = async (email) => {
+export const getAuthorizedUser = async ({ userId, email }) => {
+  const normalizedEmail = email?.trim().toLowerCase() || null;
+
+  if (userId) {
+    const { data, error } = await supabase
+      .from("usuarios_autorizados")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return data;
+  }
+
+  if (normalizedEmail) {
+    const { data, error } = await supabase
+      .from("usuarios_autorizados")
+      .select("*")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return data;
+  }
+
+  return null;
+};
+
+export const upsertPendingAuthorizedUser = async (user) => {
+  const normalizedEmail = user.email.trim().toLowerCase();
+
   const { data, error } = await supabase
     .from("usuarios_autorizados")
-    .select("*")
-    .eq("email", email)
-    .eq("activo", true)
+    .upsert(
+      {
+        user_id: user.id,
+        email: normalizedEmail,
+        tipo_mapa: "global",
+        rol: "viewer",
+        activo: false,
+      },
+      { onConflict: "email" }
+    )
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const syncAuthorizedUserIdentity = async (authorizedUser, user) => {
+  const normalizedEmail = user.email.trim().toLowerCase();
+
+  const needsSync =
+    authorizedUser.user_id !== user.id ||
+    authorizedUser.email !== normalizedEmail;
+
+  if (!needsSync) return authorizedUser;
+
+  const { data, error } = await supabase
+    .from("usuarios_autorizados")
+    .update({
+      user_id: user.id,
+      email: normalizedEmail,
+    })
+    .eq("id", authorizedUser.id)
+    .select()
     .single();
 
   if (error) throw error;

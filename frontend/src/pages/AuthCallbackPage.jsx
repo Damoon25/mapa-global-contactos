@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import {
   getCurrentUser,
   getAuthorizedUser,
   createOrUpdateProfileFromAuthorizedUser,
   signOut,
+  syncAuthorizedUserIdentity,
+  upsertPendingAuthorizedUser,
 } from "../api/authApi";
 
 export default function AuthCallbackPage() {
@@ -22,29 +23,18 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        const normalizedEmail = user.email.trim().toLowerCase();
-
-        const authorizedUser = await getAuthorizedUser(normalizedEmail);
+        let authorizedUser = await getAuthorizedUser({
+          userId: user.id,
+          email: user.email,
+        });
 
         if (!authorizedUser) {
-          const { error } = await supabase
-            .from("usuarios_autorizados")
-            .upsert(
-              {
-                email: normalizedEmail,
-                tipo_mapa: "global",
-                activo: false,
-              },
-              { onConflict: "email" },
-            );
-
-          if (error) {
-            console.error("Error creating pending authorized user:", error);
-          }
-
+          await upsertPendingAuthorizedUser(user);
           navigate("/pending", { replace: true });
           return;
         }
+
+        authorizedUser = await syncAuthorizedUserIdentity(authorizedUser, user);
 
         if (!authorizedUser.activo) {
           navigate("/pending", { replace: true });

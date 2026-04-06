@@ -18,6 +18,7 @@ import {
   updateContact,
   deleteContact,
 } from "../api/contactsApi";
+import { getAuthorizedUser } from "../api/authApi";
 import { exportContactsToExcel } from "../utils/exportExcel";
 import { importContactsFromExcel } from "../utils/importExcel";
 import {
@@ -67,6 +68,7 @@ const INITIAL_VISIBLE = 5;
 export default function HomePage() {
   const { session, loadingSession } = useSession();
   const { profile, loadingProfile } = useProfile(session?.user);
+  const [authorizedUser, setAuthorizedUser] = useState(null);
   const [hasBootstrappedApp, setHasBootstrappedApp] = useState(false);
   const isMobile = useMediaQuery("(max-width:768px)");
 
@@ -129,6 +131,8 @@ export default function HomePage() {
   const [selectedContactIds, setSelectedContactIds] = useState([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
+  const isAdmin = authorizedUser?.rol === "admin";
+
   const loadContacts = useCallback(async () => {
     try {
       setLoading(true);
@@ -185,6 +189,31 @@ export default function HomePage() {
     loadingProfile,
     session,
   ]);
+
+  useEffect(() => {
+    const loadAuthorizedUser = async () => {
+      if (!session?.user?.email) {
+        setAuthorizedUser(null);
+        return;
+      }
+
+      try {
+        const data = await getAuthorizedUser({
+          userId: session.user.id,
+          email: session.user.email,
+        });
+
+        setAuthorizedUser(data);
+      } catch (error) {
+        console.error("Error loading authorized user:", error);
+        setAuthorizedUser(null);
+      }
+    };
+
+    if (!loadingSession) {
+      loadAuthorizedUser();
+    }
+  }, [session, loadingSession]);
 
   useEffect(() => {
     if (meetingNotification) {
@@ -327,6 +356,8 @@ export default function HomePage() {
   };
 
   const handleToggleSelectionMode = () => {
+    if (!isAdmin) return;
+
     setSelectionMode((prev) => {
       const next = !prev;
 
@@ -415,6 +446,8 @@ export default function HomePage() {
   };
 
   const handleToggleContactSelection = (contactId) => {
+    if (!isAdmin) return;
+
     setSelectedContactIds((prev) => {
       const exists = prev.some((id) => String(id) === String(contactId));
 
@@ -436,6 +469,7 @@ export default function HomePage() {
   };
 
   const handleSelectAllFiltered = () => {
+    if (!isAdmin) return;
     setSelectedContactIds(filteredContacts.map((contact) => contact.id));
   };
 
@@ -498,6 +532,8 @@ export default function HomePage() {
   };
 
   const handleOpenCreate = () => {
+    if (!isAdmin) return;
+
     setDialogMode("create");
     setContactToEdit(null);
     setSelectedPosition(null);
@@ -510,6 +546,8 @@ export default function HomePage() {
   };
 
   const handleOpenEdit = (contact) => {
+    if (!isAdmin) return;
+
     setDialogMode("edit");
     setContactToEdit(contact);
     setSelectedPosition({
@@ -533,6 +571,7 @@ export default function HomePage() {
   };
 
   const handleDeleteContact = (contact) => {
+    if (!isAdmin) return;
     setContactToDelete(contact);
     setDeleteDialogOpen(true);
   };
@@ -544,6 +583,7 @@ export default function HomePage() {
   };
 
   const handleConfirmDelete = async () => {
+    if (!isAdmin) return;
     if (!contactToDelete?.id) return;
 
     try {
@@ -576,6 +616,7 @@ export default function HomePage() {
   };
 
   const handleBulkDelete = async () => {
+    if (!isAdmin) return;
     if (selectedContactIds.length === 0) return;
 
     try {
@@ -632,6 +673,8 @@ export default function HomePage() {
   };
 
   const handleCreateContact = async (formData) => {
+    if (!isAdmin) return;
+
     try {
       if (dialogMode === "edit" && contactToEdit?.id) {
         const updatedContact = await updateContact(contactToEdit.id, formData);
@@ -662,6 +705,8 @@ export default function HomePage() {
   };
 
   const handleImport = () => {
+    if (!isAdmin) return;
+
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".xlsx";
@@ -804,19 +849,21 @@ export default function HomePage() {
   const renderContactDetails = () => {
     return (
       <Stack spacing={2}>
-        <Button
-          variant="contained"
-          onClick={handleOpenCreate}
-          className="panel-primary-btn"
-          sx={{
-            borderRadius: "14px",
-            textTransform: "none",
-            fontWeight: 800,
-            py: 1.2,
-          }}
-        >
-          Agregar contacto
-        </Button>
+        {isAdmin ? (
+          <Button
+            variant="contained"
+            onClick={handleOpenCreate}
+            className="panel-primary-btn"
+            sx={{
+              borderRadius: "14px",
+              textTransform: "none",
+              fontWeight: 800,
+              py: 1.2,
+            }}
+          >
+            Agregar contacto
+          </Button>
+        ) : null}
 
         <Typography className="section-title">
           Contactos encontrados ({filteredContacts.length})
@@ -837,19 +884,21 @@ export default function HomePage() {
               Filtros
             </Button>
 
-            <Button
-              variant={bulkToolsOpen ? "contained" : "outlined"}
-              color={bulkToolsOpen ? "error" : "inherit"}
-              startIcon={<DeleteSweepIcon />}
-              onClick={() => setBulkToolsOpen((prev) => !prev)}
-              sx={{
-                borderRadius: "12px",
-                textTransform: "none",
-                fontWeight: 700,
-              }}
-            >
-              Borrar todo
-            </Button>
+            {isAdmin ? (
+              <Button
+                variant={bulkToolsOpen ? "contained" : "outlined"}
+                color={bulkToolsOpen ? "error" : "inherit"}
+                startIcon={<DeleteSweepIcon />}
+                onClick={() => setBulkToolsOpen((prev) => !prev)}
+                sx={{
+                  borderRadius: "12px",
+                  textTransform: "none",
+                  fontWeight: 700,
+                }}
+              >
+                Borrar todo
+              </Button>
+            ) : null}
           </Stack>
 
           <Collapse in={filtersOpen}>
@@ -930,7 +979,7 @@ export default function HomePage() {
             </Stack>
           </Collapse>
 
-          <Collapse in={bulkToolsOpen}>
+          <Collapse in={bulkToolsOpen && isAdmin}>
             <Stack
               spacing={1.2}
               sx={{
@@ -1042,7 +1091,7 @@ export default function HomePage() {
                   sx={{ "&:last-child": { pb: 2 } }}
                 >
                   <Box className="country-card-top">
-                    {selectionMode ? (
+                    {selectionMode && isAdmin ? (
                       <Checkbox
                         checked={isChecked}
                         onClick={(event) => event.stopPropagation()}
@@ -1078,29 +1127,31 @@ export default function HomePage() {
                       </Typography>
                     </Box>
 
-                    <Box className="country-card-actions">
-                      <IconButton
-                        size="small"
-                        className="contact-action-btn"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleOpenEdit(contact);
-                        }}
-                      >
-                        ✎
-                      </IconButton>
+                    {isAdmin ? (
+                      <Box className="country-card-actions">
+                        <IconButton
+                          size="small"
+                          className="contact-action-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenEdit(contact);
+                          }}
+                        >
+                          ✎
+                        </IconButton>
 
-                      <IconButton
-                        size="small"
-                        className="contact-action-btn contact-action-btn--danger"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleDeleteContact(contact);
-                        }}
-                      >
-                        🗑
-                      </IconButton>
-                    </Box>
+                        <IconButton
+                          size="small"
+                          className="contact-action-btn contact-action-btn--danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteContact(contact);
+                          }}
+                        >
+                          🗑
+                        </IconButton>
+                      </Box>
+                    ) : null}
                   </Box>
                 </CardContent>
               </Card>
@@ -1297,30 +1348,33 @@ export default function HomePage() {
                       className="actions-wrap topbar-actions-wrap"
                       alignItems="center"
                     >
-                      <Button
-                        variant="contained"
-                        startIcon={<UploadFileIcon />}
-                        onClick={handleImport}
-                        disabled={importing}
-                        sx={{
-                          height: 48,
-                          px: 2.2,
-                          borderRadius: "16px",
-                          textTransform: "none",
-                          fontWeight: 400,
-                          fontSize: "0.8rem",
-                          background:
-                            "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-                          boxShadow: "0 12px 24px rgba(22, 163, 74, 0.24)",
-                          "&:hover": {
+                      {isAdmin ? (
+                        <Button
+                          variant="contained"
+                          startIcon={<UploadFileIcon />}
+                          onClick={handleImport}
+                          disabled={importing}
+                          sx={{
+                            height: 48,
+                            px: 2.2,
+                            borderRadius: "16px",
+                            textTransform: "none",
+                            fontWeight: 400,
+                            fontSize: "0.8rem",
                             background:
-                              "linear-gradient(135deg, #15803d 0%, #166534 100%)",
-                            boxShadow: "0 14px 28px rgba(22, 163, 74, 0.30)",
-                          },
-                        }}
-                      >
-                        Importar
-                      </Button>
+                              "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+                            boxShadow: "0 12px 24px rgba(22, 163, 74, 0.24)",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(135deg, #15803d 0%, #166534 100%)",
+                              boxShadow:
+                                "0 14px 28px rgba(22, 163, 74, 0.30)",
+                            },
+                          }}
+                        >
+                          Importar
+                        </Button>
+                      ) : null}
 
                       <Button
                         variant="outlined"
@@ -1384,8 +1438,8 @@ export default function HomePage() {
             drawerOpen={panelOpen}
             selectedContact={selectedContact}
             onSelectContact={handleSelectContact}
-            onEditContact={handleOpenEdit}
-            onDeleteContact={handleDeleteContact}
+            onEditContact={isAdmin ? handleOpenEdit : undefined}
+            onDeleteContact={isAdmin ? handleDeleteContact : undefined}
             onViewMore={handleViewMore}
           />
         </Box>
@@ -1535,27 +1589,29 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="contact-modal-actions">
-                <button
-                  className="contact-modal-btn contact-modal-btn--secondary"
-                  onClick={() => {
-                    setDetailContact(null);
-                    handleOpenEdit(detailContact);
-                  }}
-                >
-                  Editar
-                </button>
+              {isAdmin ? (
+                <div className="contact-modal-actions">
+                  <button
+                    className="contact-modal-btn contact-modal-btn--secondary"
+                    onClick={() => {
+                      setDetailContact(null);
+                      handleOpenEdit(detailContact);
+                    }}
+                  >
+                    Editar
+                  </button>
 
-                <button
-                  className="contact-modal-btn contact-modal-btn--danger"
-                  onClick={() => {
-                    setDetailContact(null);
-                    handleDeleteContact(detailContact);
-                  }}
-                >
-                  Eliminar
-                </button>
-              </div>
+                  <button
+                    className="contact-modal-btn contact-modal-btn--danger"
+                    onClick={() => {
+                      setDetailContact(null);
+                      handleDeleteContact(detailContact);
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

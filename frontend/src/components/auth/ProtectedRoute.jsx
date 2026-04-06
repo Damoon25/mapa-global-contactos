@@ -16,9 +16,10 @@ export default function ProtectedRoute({ children }) {
       }
 
       try {
-        const authorizedUser = await getAuthorizedUser(
-          session.user.email.trim().toLowerCase(),
-        );
+        const authorizedUser = await getAuthorizedUser({
+          userId: session.user.id,
+          email: session.user.email,
+        });
 
         if (!authorizedUser) {
           setIsAuthorized("pending");

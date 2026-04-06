@@ -16,9 +16,10 @@ export default function PublicOnlyRoute({ children }) {
       }
 
       try {
-        const authorizedUser = await getAuthorizedUser(
-          session.user.email.trim().toLowerCase()
-        );
+        const authorizedUser = await getAuthorizedUser({
+          userId: session.user.id,
+          email: session.user.email,
+        });
 
         if (!authorizedUser) {
           setIsAuthorized("pending");
@@ -51,12 +52,10 @@ export default function PublicOnlyRoute({ children }) {
     );
   }
 
-  // 👇 si está logueado pero pendiente
   if (isAuthorized === "pending") {
     return <Navigate to="/pending" replace />;
   }
 
-  // 👇 si está autorizado
   if (session && isAuthorized === true) {
     return <Navigate to="/" replace />;
   }
