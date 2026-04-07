@@ -3247,9 +3247,9 @@ body,
 
   .topbar-search-row {
     display: grid !important;
-    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    grid-template-columns: 38px minmax(0, 1fr) 34px;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     width: 100%;
   }
 
@@ -3287,26 +3287,63 @@ body,
   }
 
   .topbar-user-slot--mobile {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
     display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    min-width: 42px;
-    height: 42px;
-    flex-shrink: 0;
+    align-items: center !important;
+    justify-content: center !important;
+    place-self: center !important;
+    overflow: visible !important;
   }
 
   .topbar-user-slot--mobile .MuiTypography-root {
     display: none !important;
   }
 
-  .topbar-user-slot--mobile button,
-  .topbar-user-slot--mobile .MuiButtonBase-root {
-    min-width: 42px !important;
-    width: 42px !important;
-    height: 42px !important;
+  .topbar-user-slot--mobile .topbar-user-menu {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    margin: 0 !important;
     padding: 0 !important;
-    border-radius: 50% !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu__trigger {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu__trigger span {
+    display: none !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu__trigger img {
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 !important;
+  }
+
+  .topbar-user-menu__dropdown {
+    width: 290px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .topbar-user-menu__logout {
+    width: 100% !important;
+    display: block !important;
+    text-align: center !important;
+    white-space: nowrap;
   }
 
   .topbar-user-slot--desktop {
@@ -3550,7 +3587,11 @@ body,
   }
 
   .topbar-search-row {
-    gap: 6px;
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
   }
 
   .topbar-menu-btn {
