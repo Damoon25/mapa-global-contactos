@@ -2,7 +2,7 @@ html,
 body,
 #root {
   font-family: "Roboto", sans-serif;
-  overflow: hidden;
+  overflow: hidden !important;
   width: 100vw;
   height: 100vh;
   margin: 0;
@@ -98,8 +98,13 @@ body,
 }
 
 .import-btn {
-  background: var(--primary) !important;
-  color: #fff !important;
+  background-color: #22c55e !important;
+  color: white !important;
+}
+
+.export-btn {
+  background-color: #16a34a !important;
+  color: white !important;
 }
 
 /* =========================
@@ -223,9 +228,8 @@ body,
 }
 
 /* ===== Continent chips ===== */
-
 .continent-scroll .MuiStack-root {
-  flex-wrap: wrap;
+  flex-wrap: nowrap !important;
 }
 
 .continent-chip {
@@ -2574,6 +2578,38 @@ body,
 }
 
 /* =========================
+   ADMIN USERS PANEL - FINE TUNING
+========================= */
+
+.admin-users-panel .MuiCard-root {
+  overflow: hidden;
+}
+
+.admin-users-panel .MuiChip-root {
+  max-width: 100%;
+}
+
+.admin-users-panel .MuiChip-label {
+  white-space: nowrap;
+}
+
+.admin-users-panel .MuiSelect-select {
+  font-size: 0.84rem !important;
+}
+
+.admin-users-panel .MuiSwitch-root {
+  margin-left: -6px;
+}
+
+/* =========================
+   MOBILE QUICK ACTIONS
+========================= */
+
+.mobile-quick-actions {
+  display: none;
+}
+
+/* =========================
    BREAKPOINTS
 ========================= */
 
@@ -2666,37 +2702,57 @@ body,
   /* chips debajo del buscador, alineados al sidebar */
   .continent-scroll {
     width: 100%;
-    overflow: visible;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
     margin: 0 !important;
     padding: 0 !important;
   }
 
+  .continent-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .continent-scroll-track,
   .continent-scroll .MuiStack-root {
-    display: flex;
-    flex-wrap: wrap;
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
     gap: 10px;
-    width: 100%;
-    justify-content: flex-start;
-    margin: 0 !important;
+    width: max-content !important;
+    min-width: max-content !important;
   }
 
   .continent-chip {
-    flex: 0 0 auto;
+    flex: 0 0 auto !important;
   }
 
   /* derecha */
   .topbar-actions-slot {
+    width: 100%;
     display: flex;
     justify-content: flex-end;
-    align-items: flex-start;
-    width: 100%;
   }
 
   .topbar-actions-wrap {
-    display: flex !important;
+    display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: flex-end;
+    gap: 14px !important;
     flex-wrap: nowrap;
+  }
+
+  .topbar-user-slot--desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+
+  .topbar-user-slot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .topbar-actions-wrap .MuiButton-root {
@@ -2705,16 +2761,35 @@ body,
     white-space: nowrap;
   }
 
-  .topbar-user-slot {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    margin-left: 4px;
+  .action-btn {
+    font-size: 0.82rem !important;
+    padding: 10px 14px !important;
+    border-radius: 16px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    white-space: nowrap;
+    box-shadow: var(--shadow-soft) !important;
   }
 
-  .action-btn {
-    font-size: 0.9rem !important;
-    padding: 9px 14px !important;
+  .import-btn {
+    background-color: #22c55e !important;
+    color: white !important;
+  }
+
+  .export-btn {
+    color: #16a34a !important;
+    border-color: #86efac !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-quick-actions {
+    display: none !important;
+  }
+
+  .topbar-user-slot--mobile {
+    display: none !important;
   }
 }
 
@@ -2734,6 +2809,7 @@ body,
     width: 100% !important;
     padding: 10px 12px 12px !important;
     border-radius: 0 0 18px 18px !important;
+    z-index: 1400 !important;
   }
 
   .topbar-toolbar {
@@ -2757,363 +2833,205 @@ body,
     width: 100%;
   }
 
-  /* FILA 1: menú + buscador */
-  .topbar-row--main {
-    width: 100%;
-  }
-
   .topbar-left {
     width: 100%;
   }
 
   .topbar-search-row {
     display: grid !important;
-    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    padding-right: 50px; /* espacio para el avatar */
   }
 
   .topbar-menu-btn {
     display: inline-flex !important;
-    width: 42px;
-    height: 42px;
-    margin: 0 !important;
-    border-radius: 14px !important;
-    background: rgba(255, 255, 255, 0.96) !important;
-    border: 1px solid #dde6f2 !important;
-    box-shadow: var(--shadow-soft) !important;
-    align-items: center;
-    justify-content: center;
+    width: 42px !important;
+    height: 42px !important;
+    flex-shrink: 0;
   }
 
   .search-box {
-    min-width: 0 !important;
+    flex: 1 1 auto;
     width: 100% !important;
-    padding: 10px 14px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 10px 12px !important;
     border-radius: 16px !important;
   }
 
-  .search-box .MuiInputBase-root {
-    font-size: 0.92rem;
+  .search-box input {
+    font-size: 0.82rem !important;
   }
 
-  /* AVATAR ABSOLUTO ARRIBA A LA DERECHA */
   .topbar-user-slot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 42px;
-    height: 42px;
+    position: static !important;
     display: flex !important;
     align-items: center;
     justify-content: center;
-    z-index: 3;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    z-index: 2;
   }
 
-  .topbar-user-slot > .MuiButton-root,
-  .topbar-user-slot > button,
-  .topbar-user-slot > * > .MuiButton-root,
-  .topbar-user-slot > * > button {
-    min-width: 42px !important;
-    width: 42px !important;
-    max-width: 42px !important;
-    height: 42px !important;
-    padding: 0 !important;
-    border-radius: 999px !important;
-    display: inline-flex !important;
+  .topbar-user-slot--mobile {
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    flex: 0 0 42px !important;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    flex-shrink: 0;
   }
 
-  .topbar-user-slot > .MuiButton-root .MuiButton-startIcon,
-  .topbar-user-slot > .MuiButton-root .MuiButton-endIcon,
-  .topbar-user-slot > button .MuiButton-startIcon,
-  .topbar-user-slot > button .MuiButton-endIcon,
-  .topbar-user-slot > * > .MuiButton-root .MuiTypography-root,
-  .topbar-user-slot > * > button .MuiTypography-root,
-  .topbar-user-slot > * > .MuiButton-root .user-name,
-  .topbar-user-slot > * > .MuiButton-root .user-email,
-  .topbar-user-slot > * > button .user-name,
-  .topbar-user-slot > * > button .user-email,
-  .topbar-user-slot
-    > *
-    > .MuiButton-root
-    span:not(.MuiAvatar-root):not(.MuiTouchRipple-root),
-  .topbar-user-slot
-    > *
-    > button
-    span:not(.MuiAvatar-root):not(.MuiTouchRipple-root) {
+  .topbar-user-slot--mobile .MuiTypography-root {
     display: none !important;
   }
 
-  .topbar-user-slot .MuiAvatar-root {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 0.95rem !important;
-    flex: 0 0 36px !important;
+  .topbar-user-slot--mobile button,
+  .topbar-user-slot--mobile .MuiButtonBase-root {
+    min-width: 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
   }
 
-  /* FILA 2: continentes */
-  .topbar-row--continents {
-    width: 100%;
+  .topbar-user-slot--desktop {
+    display: none !important;
   }
 
+  /* CONTINENTES: scroll horizontal real */
   .continent-scroll {
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    padding: 2px 0 !important;
+    margin: 0 !important;
   }
 
   .continent-scroll::-webkit-scrollbar {
     display: none;
   }
 
-  .continent-scroll .MuiStack-root {
-    width: max-content;
-    min-width: 100%;
-    gap: 8px;
-    justify-content: flex-start;
+  .continent-scroll-track {
+    display: inline-flex !important;
     flex-wrap: nowrap !important;
+    gap: 8px !important;
+    min-width: max-content;
+    padding-right: 6px;
+  }
+
+  .continent-scroll .MuiStack-root {
+    flex-wrap: nowrap !important;
+    width: max-content !important;
   }
 
   .continent-chip {
-    flex: 0 0 auto;
+    flex: 0 0 auto !important;
+    height: 32px !important;
+    font-size: 0.7rem !important;
   }
 
-  /* FILA 3: importar + exportar */
-  .topbar-row--actions {
+  .continent-chip .MuiChip-label {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  /* FILA DE ACCIONES MOBILE */
+  .mobile-quick-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
     width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 0 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .topbar-actions-slot {
-    width: 100%;
+  .mobile-quick-actions::-webkit-scrollbar {
+    display: none;
   }
 
-  .topbar-actions-wrap {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .topbar-actions-wrap .MuiButton-root {
-    width: 100%;
-    min-width: 0;
-    margin: 0 !important;
-  }
-
-  /* el usuario no participa de esta fila */
-  .topbar-actions-wrap .topbar-user-slot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 42px;
-    height: 42px;
-  }
-
-  /* PANEL */
-  .side-panel {
-    left: 0 !important;
-    right: auto !important;
-    top: 0 !important;
-    width: 84% !important;
-    max-width: none !important;
-    height: 100% !important;
-    transform: translateX(-105%) scale(0.985);
-    transform-origin: left top;
-    opacity: 0;
-    pointer-events: none;
-    box-shadow:
-      0 18px 40px rgba(15, 23, 42, 0.16),
-      0 6px 18px rgba(15, 23, 42, 0.08);
-    transition:
-      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.22s ease;
-    will-change: transform, opacity;
-  }
-
-  .side-panel.open {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .side-panel-header {
-    padding: 20px 18px 14px;
-  }
-
-  .side-panel-content {
-    padding: 14px;
-  }
-
-  .side-panel-body {
-    padding: 16px;
-  }
-
-  .floating-popup {
-    left: 16px;
-    right: 16px;
-    top: auto;
-    bottom: 16px;
-    width: auto;
-  }
-
-  /*
-    FORM
-  */
-
-  .contact-dialog-paper {
-    border-radius: 22px !important;
-    margin: 12px !important;
-  }
-
-  .contact-dialog-paper .MuiDialogContent-root {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    padding-top: 24px !important;
-    padding-bottom: 18px !important;
-  }
-
-  .contact-dialog-footer {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  .contact-dialog-submit-btn {
-    min-width: 180px !important;
-  }
-
-  .contact-modal {
-    width: 100%;
-    max-height: 90vh;
-    padding: 20px;
-    border-radius: 22px;
-  }
-
-  .contact-modal-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .contact-modal-header {
-    align-items: flex-start;
-  }
-
-  .contact-modal-actions {
-    flex-direction: column;
-  }
-
-  .contact-modal-btn {
-    width: 100%;
-  }
-
-  .agenda-top-actions {
-    width: 100%;
-  }
-
-  .agenda-top-actions .agenda-add-btn,
-  .agenda-top-actions .agenda-calendar-open-btn {
-    flex: 1 1 100%;
-    justify-content: center;
-  }
-
-  /* =========================
-   MOBILE CALENDAR + DASHBOARD ACTIONS
-========================= */
-
-  .mobile-panel-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 10px;
-    width: 100%;
-  }
-
-  .mobile-panel-action-btn {
-    min-width: 0 !important;
-    height: 40px !important;
+  .mobile-quick-action-btn {
+    flex: 0 0 auto !important;
+    width: 42px !important;
+    height: 42px !important;
     border-radius: 14px !important;
-    text-transform: none !important;
-    font-weight: 700 !important;
-    font-size: 0.8rem !important;
-    justify-content: center !important;
-    white-space: nowrap;
-    padding: 0 12px !important;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08) !important;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.96) !important;
+    border: 1px solid rgba(226, 232, 240, 0.95) !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12) !important;
+    color: #334155 !important;
   }
 
-  .mobile-panel-action-btn .MuiButton-startIcon {
-    margin-right: 6px !important;
-    margin-left: 0 !important;
+  .mobile-quick-action-btn .MuiSvgIcon-root {
+    font-size: 22px !important;
   }
 
-  .mobile-panel-action-btn .MuiSvgIcon-root {
-    font-size: 18px !important;
-  }
-
-  .mobile-panel-action-btn--calendar {
+  .mobile-quick-action-btn--calendar {
     color: #2563eb !important;
-    border-color: rgba(59, 130, 246, 0.28) !important;
-    background: rgba(239, 246, 255, 0.94) !important;
   }
 
-  .mobile-panel-action-btn--calendar:hover {
-    background: rgba(219, 234, 254, 0.98) !important;
-    border-color: rgba(59, 130, 246, 0.42) !important;
-  }
-
-  .mobile-panel-action-btn--dashboard {
+  .mobile-quick-action-btn--dashboard {
     color: #7c3aed !important;
-    border-color: rgba(167, 139, 250, 0.28) !important;
-    background: rgba(245, 243, 255, 0.96) !important;
   }
 
-  .mobile-panel-action-btn--dashboard:hover {
-    background: rgba(237, 233, 254, 0.98) !important;
-    border-color: rgba(167, 139, 250, 0.42) !important;
+  .mobile-quick-action-btn--admin {
+    color: #475569 !important;
   }
 
-  .mini-sidebar-btn--recenter {
+  .mobile-quick-action-btn--recenter {
+    color: #2563eb !important;
+  }
+
+  .mobile-quick-action-btn--import {
+    background: #22c55e !important;
+    color: #fff !important;
+  }
+
+  .mobile-quick-action-btn--export {
+    background: #16a34a !important;
+    color: #fff !important;
+  }
+
+  /* desactivar botón flotante si ahora va en la fila */
+  .mobile-recenter-btn {
     display: none !important;
   }
 
-  .mobile-recenter-btn {
-    display: inline-flex !important;
-    position: fixed !important;
+  /* Oculta el nombre, deja solo el avatar */
+  .topbar-user-slot span,
+  .topbar-user-slot .MuiTypography-root {
+    display: none !important;
+  }
+
+  /*boton de recentrar */
+
+  .mobile-recenter-floating {
+    position: absolute !important;
+    bottom: 16px;
     right: 16px;
-    bottom: 18px;
-    z-index: 1700;
+    z-index: 1400;
     width: 52px !important;
     height: 52px !important;
-    border-radius: 999px !important;
-    background: rgba(255, 255, 255, 0.96) !important;
-    border: 1px solid rgba(226, 232, 240, 0.96) !important;
-    box-shadow:
-      0 16px 32px rgba(15, 23, 42, 0.16),
-      0 8px 18px rgba(15, 23, 42, 0.1) !important;
-    color: #2563eb !important;
-    backdrop-filter: blur(10px);
-    transition:
-      transform 0.18s ease,
-      box-shadow 0.18s ease,
-      background-color 0.18s ease !important;
-  }
-
-  .mobile-recenter-btn:hover {
-    transform: translateY(-1px);
+    border-radius: 16px !important;
     background: #ffffff !important;
-    box-shadow:
-      0 20px 36px rgba(15, 23, 42, 0.18),
-      0 10px 22px rgba(15, 23, 42, 0.12) !important;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    color: #2563eb !important;
   }
 
-  .mobile-recenter-btn .MuiSvgIcon-root {
-    font-size: 24px !important;
+  .mobile-recenter-floating .MuiSvgIcon-root {
+    font-size: 26px !important;
   }
 }
 

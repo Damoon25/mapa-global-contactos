@@ -170,6 +170,9 @@ function MarkerPopupContent({
   const hasCallablePhone = Boolean(phoneHref);
   const hasWhatsAppPhone = Boolean(whatsappPhone);
 
+  const canEdit = typeof onEdit === "function";
+  const canDelete = typeof onDelete === "function";
+
   return (
     <Box
       sx={{
@@ -332,27 +335,31 @@ function MarkerPopupContent({
             <WhatsAppIcon sx={{ fontSize: 20 }} />
           </MarkerPopupActionButton>
 
-          <MarkerPopupActionButton
-            title="Editar"
-            onClick={(e) => {
-              e?.stopPropagation?.();
-              onEdit?.(contact);
-            }}
-            className="marker-popup-icon-btn--edit"
-          >
-            <EditOutlinedIcon sx={{ fontSize: 20 }} />
-          </MarkerPopupActionButton>
+          {canEdit ? (
+            <MarkerPopupActionButton
+              title="Editar"
+              onClick={(e) => {
+                e?.stopPropagation?.();
+                onEdit(contact);
+              }}
+              className="marker-popup-icon-btn--edit"
+            >
+              <EditOutlinedIcon sx={{ fontSize: 20 }} />
+            </MarkerPopupActionButton>
+          ) : null}
 
-          <MarkerPopupActionButton
-            title="Eliminar"
-            onClick={(e) => {
-              e?.stopPropagation?.();
-              onDelete?.(contact);
-            }}
-            className="marker-popup-icon-btn--danger"
-          >
-            <DeleteOutlineIcon sx={{ fontSize: 20 }} />
-          </MarkerPopupActionButton>
+          {canDelete ? (
+            <MarkerPopupActionButton
+              title="Eliminar"
+              onClick={(e) => {
+                e?.stopPropagation?.();
+                onDelete(contact);
+              }}
+              className="marker-popup-icon-btn--danger"
+            >
+              <DeleteOutlineIcon sx={{ fontSize: 20 }} />
+            </MarkerPopupActionButton>
+          ) : null}
         </Stack>
       </Stack>
     </Box>

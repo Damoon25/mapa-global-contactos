@@ -18,7 +18,12 @@ import {
   updateContact,
   deleteContact,
 } from "../api/contactsApi";
-import { getAuthorizedUser } from "../api/authApi";
+import {
+  getAuthorizedUser,
+  getAllAuthorizedUsers,
+  updateAuthorizedUser,
+} from "../api/authApi";
+import AdminUsersPanel from "../components/panels/AdminUsersPanel";
 import { exportContactsToExcel } from "../utils/exportExcel";
 import { importContactsFromExcel } from "../utils/importExcel";
 import {
@@ -55,6 +60,7 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
+import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import MapView from "../components/MapView";
 import AddContactDialog from "../components/AddContactDialog";
 import ConfirmDeleteDialog from "../components/ConfirmDeleteDialog";
@@ -69,6 +75,9 @@ export default function HomePage() {
   const { session, loadingSession } = useSession();
   const { profile, loadingProfile } = useProfile(session?.user);
   const [authorizedUser, setAuthorizedUser] = useState(null);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
+  const [savingAdminUserId, setSavingAdminUserId] = useState(null);
   const [hasBootstrappedApp, setHasBootstrappedApp] = useState(false);
   const isMobile = useMediaQuery("(max-width:768px)");
 
@@ -175,6 +184,19 @@ export default function HomePage() {
     }
   }, []);
 
+  const loadAdminUsers = useCallback(async () => {
+    try {
+      setLoadingAdminUsers(true);
+      const data = await getAllAuthorizedUsers();
+      setAdminUsers(data);
+    } catch (error) {
+      console.error("Error loading admin users:", error);
+      showFeedback("error", "No se pudieron cargar los usuarios.");
+    } finally {
+      setLoadingAdminUsers(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!loadingSession && !loadingProfile && session?.user) {
       loadContacts();
@@ -189,6 +211,12 @@ export default function HomePage() {
     loadingProfile,
     session,
   ]);
+
+  useEffect(() => {
+    if (!loadingSession && session?.user && isAdmin) {
+      loadAdminUsers();
+    }
+  }, [loadingSession, session, isAdmin, loadAdminUsers]);
 
   useEffect(() => {
     const loadAuthorizedUser = async () => {
@@ -471,6 +499,74 @@ export default function HomePage() {
   const handleSelectAllFiltered = () => {
     if (!isAdmin) return;
     setSelectedContactIds(filteredContacts.map((contact) => contact.id));
+  };
+
+  const handleApproveUser = async (user) => {
+    try {
+      setSavingAdminUserId(user.id);
+
+      const updated = await updateAuthorizedUser(user.id, {
+        activo: true,
+      });
+
+      setAdminUsers((prev) =>
+        prev.map((item) => (item.id === user.id ? updated : item)),
+      );
+
+      showFeedback("success", "Usuario aprobado correctamente.");
+    } catch (error) {
+      console.error("Error approving user:", error);
+      showFeedback("error", "No se pudo aprobar el usuario.");
+    } finally {
+      setSavingAdminUserId(null);
+    }
+  };
+
+  const handleToggleUserActive = async (user) => {
+    try {
+      setSavingAdminUserId(user.id);
+
+      const updated = await updateAuthorizedUser(user.id, {
+        activo: !user.activo,
+      });
+
+      setAdminUsers((prev) =>
+        prev.map((item) => (item.id === user.id ? updated : item)),
+      );
+
+      showFeedback(
+        "success",
+        updated.activo
+          ? "Usuario activado correctamente."
+          : "Usuario desactivado correctamente.",
+      );
+    } catch (error) {
+      console.error("Error toggling user active:", error);
+      showFeedback("error", "No se pudo actualizar el estado del usuario.");
+    } finally {
+      setSavingAdminUserId(null);
+    }
+  };
+
+  const handleChangeUserRole = async (user, nextRole) => {
+    try {
+      setSavingAdminUserId(user.id);
+
+      const updated = await updateAuthorizedUser(user.id, {
+        rol: nextRole,
+      });
+
+      setAdminUsers((prev) =>
+        prev.map((item) => (item.id === user.id ? updated : item)),
+      );
+
+      showFeedback("success", "Rol actualizado correctamente.");
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      showFeedback("error", "No se pudo actualizar el rol del usuario.");
+    } finally {
+      setSavingAdminUserId(null);
+    }
   };
 
   const togglePanel = () => {
@@ -770,6 +866,17 @@ export default function HomePage() {
     }
   };
 
+  const openAdminPanel = () => {
+    if (!isAdmin) return;
+
+    setPanelView("admin");
+    setPanelOpen(true);
+
+    if (isMobile) {
+      setSelectedContact(null);
+    }
+  };
+
   const renderPanelContent = () => {
     if (panelView === "calendar") {
       return (
@@ -840,6 +947,22 @@ export default function HomePage() {
             </Card>
           </Stack>
         </Stack>
+      );
+    }
+
+    if (panelView === "admin" && isAdmin) {
+      return (
+        <Box className="admin-users-panel">
+          <AdminUsersPanel
+            users={adminUsers}
+            loading={loadingAdminUsers}
+            savingUserId={savingAdminUserId}
+            currentUserId={session?.user?.id || null}
+            onApproveUser={handleApproveUser}
+            onToggleActive={handleToggleUserActive}
+            onChangeRole={handleChangeUserRole}
+          />
+        </Box>
       );
     }
 
@@ -1224,47 +1347,59 @@ export default function HomePage() {
   return (
     <>
       <Box className="app-root">
-        <Box className="mini-sidebar">
-          <Stack spacing={1.2} alignItems="center">
-            <IconButton
-              onClick={openContactsPanel}
-              className="mini-sidebar-btn"
-              title="Contactos"
-            >
-              <MenuIcon />
-            </IconButton>
-
-            <IconButton
-              onClick={openCalendarPanel}
-              className="mini-sidebar-btn"
-              title="Calendario"
-            >
-              <CalendarMonthIcon />
-            </IconButton>
-
-            <IconButton
-              onClick={openDashboardPanel}
-              className="mini-sidebar-btn"
-              title="Dashboard"
-            >
-              <InsightsOutlinedIcon />
-            </IconButton>
-
-            <IconButton
-              onClick={handleRecenterMap}
-              className="mini-sidebar-btn mini-sidebar-btn--recenter"
-              title="Recentrar mapa"
-            >
-              <MyLocationIcon />
-            </IconButton>
-          </Stack>
-        </Box>
-
         <Box className="mobile-menu-button">
           <IconButton onClick={togglePanel}>
             <MenuIcon />
           </IconButton>
         </Box>
+
+        {!isMobile ? (
+          <Box className="mini-sidebar">
+            <Stack spacing={1.2} alignItems="center">
+              <IconButton
+                onClick={openContactsPanel}
+                className="mini-sidebar-btn"
+                title="Contactos"
+              >
+                <MenuIcon />
+              </IconButton>
+
+              <IconButton
+                onClick={openCalendarPanel}
+                className="mini-sidebar-btn"
+                title="Calendario"
+              >
+                <CalendarMonthIcon />
+              </IconButton>
+
+              <IconButton
+                onClick={openDashboardPanel}
+                className="mini-sidebar-btn"
+                title="Dashboard"
+              >
+                <InsightsOutlinedIcon />
+              </IconButton>
+
+              {isAdmin ? (
+                <IconButton
+                  onClick={openAdminPanel}
+                  className="mini-sidebar-btn"
+                  title="Administración"
+                >
+                  <AdminPanelSettingsRoundedIcon />
+                </IconButton>
+              ) : null}
+
+              <IconButton
+                onClick={handleRecenterMap}
+                className="mini-sidebar-btn mini-sidebar-btn--recenter"
+                title="Recentrar mapa"
+              >
+                <MyLocationIcon />
+              </IconButton>
+            </Stack>
+          </Box>
+        ) : null}
 
         <AppBar position="absolute" className="topbar">
           <Toolbar className="topbar-toolbar">
@@ -1273,12 +1408,14 @@ export default function HomePage() {
                 <Box className="topbar-row topbar-row--main">
                   <Box className="topbar-left">
                     <Box className="topbar-search-row">
-                      <IconButton
-                        className="menu-btn topbar-menu-btn"
-                        onClick={togglePanel}
-                      >
-                        <MenuIcon />
-                      </IconButton>
+                      {isMobile ? (
+                        <IconButton
+                          className="menu-btn topbar-menu-btn"
+                          onClick={togglePanel}
+                        >
+                          <MenuIcon />
+                        </IconButton>
+                      ) : null}
 
                       <Box className="search-box">
                         <SearchIcon className="search-icon" />
@@ -1291,19 +1428,32 @@ export default function HomePage() {
                           InputProps={{ disableUnderline: true }}
                         />
                       </Box>
+
+                      {isMobile ? (
+                        <Box className="topbar-user-slot topbar-user-slot--mobile">
+                          <UserMenu
+                            user={session?.user}
+                            profile={profile}
+                            authorizedUser={authorizedUser}
+                          />
+                        </Box>
+                      ) : null}
                     </Box>
                   </Box>
                 </Box>
 
                 <Box className="topbar-row topbar-row--continents">
                   <Box className="continent-scroll">
-                    <Stack direction="row" spacing={1}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      className="continent-scroll-track"
+                    >
                       {CONTINENTES.map((continent) => (
                         <Chip
                           key={continent}
                           label={continent}
                           clickable
-                          data-continent={continent}
                           className={`continent-chip continent-chip--${continent
                             .toLowerCase()
                             .normalize("NFD")
@@ -1316,94 +1466,95 @@ export default function HomePage() {
                       ))}
                     </Stack>
                   </Box>
-
-                  {isMobile ? (
-                    <Box className="mobile-panel-actions">
-                      <Button
-                        variant="outlined"
-                        startIcon={<CalendarMonthIcon />}
-                        onClick={openCalendarPanel}
-                        className="mobile-panel-action-btn mobile-panel-action-btn--calendar"
-                      >
-                        Calendario
-                      </Button>
-
-                      <Button
-                        variant="outlined"
-                        startIcon={<InsightsOutlinedIcon />}
-                        onClick={openDashboardPanel}
-                        className="mobile-panel-action-btn mobile-panel-action-btn--dashboard"
-                      >
-                        Dashboard
-                      </Button>
-                    </Box>
-                  ) : null}
                 </Box>
-
                 <Box className="topbar-row topbar-row--actions">
                   <Box className="topbar-actions-slot">
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      className="actions-wrap topbar-actions-wrap"
-                      alignItems="center"
-                    >
-                      {isAdmin ? (
-                        <Button
-                          variant="contained"
-                          startIcon={<UploadFileIcon />}
-                          onClick={handleImport}
-                          disabled={importing}
-                          sx={{
-                            height: 48,
-                            px: 2.2,
-                            borderRadius: "16px",
-                            textTransform: "none",
-                            fontWeight: 400,
-                            fontSize: "0.8rem",
-                            background:
-                              "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-                            boxShadow: "0 12px 24px rgba(22, 163, 74, 0.24)",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(135deg, #15803d 0%, #166534 100%)",
-                              boxShadow:
-                                "0 14px 28px rgba(22, 163, 74, 0.30)",
-                            },
-                          }}
-                        >
-                          Importar
-                        </Button>
-                      ) : null}
-
-                      <Button
-                        variant="outlined"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExport}
-                        disabled={importing}
-                        sx={{
-                          height: 48,
-                          px: 2.2,
-                          borderRadius: "16px",
-                          textTransform: "none",
-                          fontWeight: 400,
-                          fontSize: "0.8rem",
-                          color: "#16a34a",
-                          borderColor: "rgba(22, 163, 74, 0.55)",
-                          backgroundColor: "rgba(255,255,255,0.94)",
-                          "&:hover": {
-                            borderColor: "#15803d",
-                            backgroundColor: "rgba(22, 163, 74, 0.08)",
-                          },
-                        }}
+                    {!isMobile ? (
+                      <Stack
+                        direction="row"
+                        spacing={1.5}
+                        className="actions-wrap topbar-actions-wrap"
+                        alignItems="center"
                       >
-                        Exportar
-                      </Button>
+                        {isAdmin ? (
+                          <Button
+                            variant="contained"
+                            startIcon={<UploadFileIcon />}
+                            onClick={handleImport}
+                            disabled={importing}
+                            className="action-btn import-btn"
+                          >
+                            Importar
+                          </Button>
+                        ) : null}
 
-                      <Box className="topbar-user-slot">
-                        <UserMenu user={session?.user} profile={profile} />
+                        <Button
+                          variant="outlined"
+                          startIcon={<DownloadIcon />}
+                          onClick={handleExport}
+                          disabled={importing}
+                          className="action-btn export-btn"
+                        >
+                          Exportar
+                        </Button>
+
+                        <Box className="topbar-user-slot topbar-user-slot--desktop">
+                          <UserMenu
+                            user={session?.user}
+                            profile={profile}
+                            authorizedUser={authorizedUser}
+                          />
+                        </Box>
+                      </Stack>
+                    ) : (
+                      <Box className="mobile-quick-actions">
+                        <IconButton
+                          onClick={openCalendarPanel}
+                          className="mobile-quick-action-btn mobile-quick-action-btn--calendar"
+                          title="Calendario"
+                        >
+                          <CalendarMonthIcon />
+                        </IconButton>
+
+                        <IconButton
+                          onClick={openDashboardPanel}
+                          className="mobile-quick-action-btn mobile-quick-action-btn--dashboard"
+                          title="Dashboard"
+                        >
+                          <InsightsOutlinedIcon />
+                        </IconButton>
+
+                        {isAdmin ? (
+                          <IconButton
+                            onClick={openAdminPanel}
+                            className="mobile-quick-action-btn mobile-quick-action-btn--admin"
+                            title="Administración"
+                          >
+                            <AdminPanelSettingsRoundedIcon />
+                          </IconButton>
+                        ) : null}
+
+                        {isAdmin ? (
+                          <IconButton
+                            onClick={handleImport}
+                            disabled={importing}
+                            className="mobile-quick-action-btn mobile-quick-action-btn--import"
+                            title="Importar"
+                          >
+                            <UploadFileIcon />
+                          </IconButton>
+                        ) : null}
+
+                        <IconButton
+                          onClick={handleExport}
+                          disabled={importing}
+                          className="mobile-quick-action-btn mobile-quick-action-btn--export"
+                          title="Exportar"
+                        >
+                          <DownloadIcon />
+                        </IconButton>
                       </Box>
-                    </Stack>
+                    )}
                   </Box>
                 </Box>
               </Box>
@@ -1419,14 +1570,18 @@ export default function HomePage() {
               ? "Agenda global"
               : panelView === "dashboard"
                 ? "Dashboard"
-                : "Mapa de contactos"
+                : panelView === "admin"
+                  ? "Administración"
+                  : "Mapa de contactos"
           }
           subtitle={
             panelView === "calendar"
               ? "Reuniones y cronograma"
               : panelView === "dashboard"
                 ? "Métricas y actividad"
-                : "Directorio internacional"
+                : panelView === "admin"
+                  ? "Gestión de accesos y permisos"
+                  : "Directorio internacional"
           }
         >
           {renderPanelContent()}
@@ -1444,15 +1599,14 @@ export default function HomePage() {
           />
         </Box>
 
-        {isMobile ? (
+        {isMobile && (
           <IconButton
             onClick={handleRecenterMap}
-            className="mobile-recenter-btn"
-            title="Recentrar mapa"
+            className="mobile-recenter-floating"
           >
             <MyLocationIcon />
           </IconButton>
-        ) : null}
+        )}
 
         <AddContactDialog
           open={openDialog}

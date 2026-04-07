@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "../../api/authApi";
 
-export default function UserMenu({ user, profile }) {
+export default function UserMenu({ user, profile, authorizedUser }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -39,7 +39,18 @@ export default function UserMenu({ user, profile }) {
   const email = user?.email || profile?.email || "";
 
   const accessLabel =
-    profile?.tipo_mapa === "argentina" ? "Argentina" : "Global";
+    authorizedUser?.tipo_mapa === "argentina"
+      ? "Argentina"
+      : authorizedUser?.tipo_mapa === "publico"
+        ? "Público"
+        : "Global";
+
+  const roleLabel =
+    authorizedUser?.rol === "admin"
+      ? "Admin"
+      : authorizedUser?.rol === "viewer"
+        ? "Viewer"
+        : "Viewer";
 
   return (
     <div ref={menuRef} style={{ position: "relative" }}>
@@ -147,6 +158,19 @@ export default function UserMenu({ user, profile }) {
             }}
           >
             Acceso: <strong>{accessLabel}</strong>
+          </div>
+
+          <div
+            style={{
+              marginTop: "10px",
+              padding: "10px 12px",
+              borderRadius: "14px",
+              background: "#f8fafc",
+              fontSize: "13px",
+              color: "#334155",
+            }}
+          >
+            Perfil: <strong>{roleLabel}</strong>
           </div>
 
           <button

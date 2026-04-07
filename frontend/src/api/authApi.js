@@ -140,3 +140,27 @@ export const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 };
+
+
+export const getAllAuthorizedUsers = async () => {
+  const { data, error } = await supabase
+    .from("usuarios_autorizados")
+    .select("*")
+    .order("activo", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateAuthorizedUser = async (id, updates) => {
+  const { data, error } = await supabase
+    .from("usuarios_autorizados")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
