@@ -3198,6 +3198,7 @@ body,
     top: 10px !important;
     width: auto !important;
     padding: 0 !important;
+    z-index: 1400 !important;
   }
 
   .topbar-toolbar {
@@ -3207,36 +3208,57 @@ body,
 
   .topbar-panel {
     width: 100%;
+    padding: 0 !important;
   }
 
   .topbar-layout {
     display: flex !important;
     flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
     gap: 8px !important;
-    width: 100%;
+    width: 100% !important;
   }
 
   .topbar-row {
-    width: 100%;
+    width: 100% !important;
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  /* FILA 1: menú + buscador + avatar */
+  .topbar-row--main {
+    order: 1;
+  }
+
+  .topbar-left {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
   }
 
   .topbar-search-row {
     display: grid !important;
-    grid-template-columns: 38px minmax(0, 1fr) 34px;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
+    grid-template-columns: 42px minmax(0, 1fr) 34px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
   }
 
-  .topbar-menu-btn {
-    width: 38px !important;
-    height: 38px !important;
+  .topbar-menu-btn,
+  .menu-btn {
     display: inline-flex !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    flex-shrink: 0 !important;
   }
 
   .search-box {
-    min-width: 0 !important;
     width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
     padding: 8px 12px !important;
     border-radius: 16px !important;
   }
@@ -3250,46 +3272,44 @@ body,
     min-width: 34px !important;
     max-width: 34px !important;
     height: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    place-self: center !important;
   }
 
   .topbar-user-slot--mobile .topbar-user-menu {
     width: 34px !important;
     min-width: 34px !important;
+    max-width: 34px !important;
   }
 
   .topbar-user-slot--mobile .topbar-user-menu__trigger {
     width: 34px !important;
     min-width: 34px !important;
+    max-width: 34px !important;
     height: 34px !important;
     padding: 0 !important;
     gap: 0 !important;
     justify-content: center !important;
   }
 
-  .topbar-user-slot--mobile .topbar-user-menu__trigger span {
-    display: none !important;
-  }
-
-  .topbar-user-slot--mobile .topbar-user-menu__trigger img {
-    width: 30px !important;
-    height: 30px !important;
-  }
-
+  /* FILA 2: continentes */
   .topbar-row--continents {
-    margin-top: 0 !important;
+    order: 2;
+    width: 100% !important;
   }
 
   .continent-scroll {
-    width: 100%;
+    width: 100% !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    scrollbar-width: none;
     padding: 0 !important;
+    margin: 0 !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .continent-scroll::-webkit-scrollbar {
@@ -3312,24 +3332,33 @@ body,
   }
 
   .continent-chip .MuiChip-label {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
     white-space: nowrap !important;
   }
 
+  /* FILA 3: acciones rápidas */
   .topbar-row--actions {
-    width: 100%;
+    order: 3;
+    width: 100% !important;
+  }
+
+  .topbar-actions-slot {
+    width: 100% !important;
+    display: block !important;
   }
 
   .mobile-quick-actions {
     display: flex !important;
-    align-items: center;
-    gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    width: 100%;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     padding: 0 !important;
+    margin: 0 !important;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .mobile-quick-actions::-webkit-scrollbar {
@@ -3337,24 +3366,29 @@ body,
   }
 
   .mobile-quick-action-btn {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
     border-radius: 12px !important;
+    flex: 0 0 auto !important;
   }
 
   .mobile-quick-action-btn .MuiSvgIcon-root {
     font-size: 19px !important;
   }
 
+  /* recentrar abajo a la derecha */
   .mobile-recenter-floating,
   .mobile-recenter-btn {
+    display: inline-flex !important;
     width: 42px !important;
     height: 42px !important;
     right: 12px !important;
     bottom: 12px !important;
+    z-index: 1400 !important;
   }
 
+  /* side panel compacto en horizontal */
   .side-panel {
     width: min(320px, 78vw) !important;
   }
