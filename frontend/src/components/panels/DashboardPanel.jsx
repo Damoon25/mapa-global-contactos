@@ -143,38 +143,70 @@ export default function DashboardPanel({ contacts = [], meetings = [] }) {
         />
       ),
       modalContent: (
-        <Box className="dashboard-modal-pie-wrap">
-          <PieChart
-            series={[
-              {
-                data: metrics.topCompanies.map((item, index) => ({
-                  ...item,
-                  color: DASHBOARD_COLORS[index % DASHBOARD_COLORS.length],
-                })),
-                innerRadius: 70,
-                outerRadius: 128,
-                paddingAngle: 3,
-                cornerRadius: 7,
-              },
-            ]}
-            height={isMobile ? 320 : 360}
-            margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            slotProps={{
-              legend: {
-                direction: "column",
-                position: { vertical: "middle", horizontal: "right" },
-              },
-            }}
-          />
+        <Box
+          className="dashboard-modal-pie-layout"
+          sx={{
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "center" : "flex-start",
+          }}
+        >
+          <Box className="dashboard-modal-pie-chart-box">
+            <PieChart
+              series={[
+                {
+                  data: metrics.topCompanies.map((item, index) => ({
+                    ...item,
+                    color: DASHBOARD_COLORS[index % DASHBOARD_COLORS.length],
+                  })),
+                  innerRadius: isMobile ? 60 : 70,
+                  outerRadius: isMobile ? 110 : 128,
+                  paddingAngle: 3,
+                  cornerRadius: 7,
+                  cx: isMobile ? 140 : 160,
+                  cy: isMobile ? 140 : 160,
+                },
+              ]}
+              height={isMobile ? 280 : 320}
+              width={isMobile ? 280 : 320}
+              hideLegend
+              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            />
 
-          <Box className="dashboard-modal-pie-center">
-            <Typography className="dashboard-modal-pie-center-value">
-              {companiesTotal}
-            </Typography>
-            <Typography className="dashboard-modal-pie-center-text">
-              empresas
-            </Typography>
+            <Box className="dashboard-modal-pie-center">
+              <Typography className="dashboard-modal-pie-center-value">
+                {companiesTotal}
+              </Typography>
+              <Typography className="dashboard-modal-pie-center-text">
+                empresas
+              </Typography>
+            </Box>
           </Box>
+
+          <Stack className="dashboard-modal-pie-legend" spacing={1}>
+            {metrics.topCompanies.map((item, index) => (
+              <Stack
+                key={item.id}
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                className="dashboard-modal-pie-legend-row"
+              >
+                <Box
+                  className="dashboard-modal-pie-legend-dot"
+                  sx={{
+                    backgroundColor:
+                      DASHBOARD_COLORS[index % DASHBOARD_COLORS.length],
+                  }}
+                />
+                <Typography className="dashboard-modal-pie-legend-label">
+                  {item.label}
+                </Typography>
+                <Typography className="dashboard-modal-pie-legend-value">
+                  {item.value}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
         </Box>
       ),
     },
@@ -313,39 +345,37 @@ export default function DashboardPanel({ contacts = [], meetings = [] }) {
 
   return (
     <>
-      <Box className="dashboard-panel-root">
-        <Grid container spacing={1.6}>
-          {cards.map((card) => (
-            <Grid item xs={12} key={card.id}>
-              <Paper
-                elevation={0}
-                className="dashboard-entry-card"
-                onClick={() => setActiveModal(card.id)}
+      <Stack spacing={1.6} className="dashboard-cards-stack">
+        {cards.map((card) => (
+          <Box key={card.id} className="dashboard-card-slot">
+            <Paper
+              elevation={0}
+              className="dashboard-entry-card"
+              onClick={() => setActiveModal(card.id)}
+            >
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="flex-start"
+                sx={{ mb: 1.4 }}
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  sx={{ mb: 1.4 }}
-                >
-                  <Box className="dashboard-entry-icon">{card.icon}</Box>
-                  <ArrowOutwardRoundedIcon className="dashboard-entry-arrow" />
-                </Stack>
+                <Box className="dashboard-entry-icon">{card.icon}</Box>
+                <ArrowOutwardRoundedIcon className="dashboard-entry-arrow" />
+              </Stack>
 
-                <Typography className="dashboard-entry-title">
-                  {card.title}
-                </Typography>
+              <Typography className="dashboard-entry-title">
+                {card.title}
+              </Typography>
 
-                <Typography className="dashboard-entry-subtitle">
-                  {card.subtitle}
-                </Typography>
+              <Typography className="dashboard-entry-subtitle">
+                {card.subtitle}
+              </Typography>
 
-                <Box className="dashboard-entry-preview">{card.preview}</Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+              <Box className="dashboard-entry-preview">{card.preview}</Box>
+            </Paper>
+          </Box>
+        ))}
+      </Stack>
 
       <Dialog
         open={Boolean(currentCard)}
