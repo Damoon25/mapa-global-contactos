@@ -23,6 +23,7 @@ import {
   getAuthorizedUser,
   getAllAuthorizedUsers,
   updateAuthorizedUser,
+  deleteAuthorizedUser,
 } from "../api/authApi";
 import AdminUsersPanel from "../components/panels/AdminUsersPanel";
 import { exportContactsToExcel } from "../utils/exportExcel";
@@ -79,6 +80,9 @@ export default function HomePage() {
   const [adminUsers, setAdminUsers] = useState([]);
   const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
   const [savingAdminUserId, setSavingAdminUserId] = useState(null);
+  const [adminUserToDelete, setAdminUserToDelete] = useState(null);
+  const [deleteAdminUserDialogOpen, setDeleteAdminUserDialogOpen] =
+    useState(false);
   const [hasBootstrappedApp, setHasBootstrappedApp] = useState(false);
   const isMobile = useMediaQuery(
     "(max-width:768px) and (orientation: portrait)",
@@ -551,6 +555,47 @@ export default function HomePage() {
     }
   };
 
+  const handleAskDeleteUser = (user) => {
+    if (!isAdmin) return;
+    if (!user?.id) return;
+    if (user.user_id === session?.user?.id) return;
+
+    setAdminUserToDelete(user);
+    setDeleteAdminUserDialogOpen(true);
+  };
+
+  const handleCloseDeleteAdminUserDialog = () => {
+    if (savingAdminUserId) return;
+
+    setDeleteAdminUserDialogOpen(false);
+    setAdminUserToDelete(null);
+  };
+
+  const handleConfirmDeleteAdminUser = async () => {
+    if (!isAdmin) return;
+    if (!adminUserToDelete?.id) return;
+    if (adminUserToDelete.user_id === session?.user?.id) return;
+
+    try {
+      setSavingAdminUserId(adminUserToDelete.id);
+
+      await deleteAuthorizedUser(adminUserToDelete.id);
+
+      setAdminUsers((prev) =>
+        prev.filter((item) => item.id !== adminUserToDelete.id),
+      );
+
+      showFeedback("success", "Usuario eliminado correctamente.");
+      setDeleteAdminUserDialogOpen(false);
+      setAdminUserToDelete(null);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      showFeedback("error", "No se pudo eliminar el usuario.");
+    } finally {
+      setSavingAdminUserId(null);
+    }
+  };
+
   const handleChangeUserRole = async (user, nextRole) => {
     try {
       setSavingAdminUserId(user.id);
@@ -914,6 +959,7 @@ export default function HomePage() {
             onApproveUser={handleApproveUser}
             onToggleActive={handleToggleUserActive}
             onChangeRole={handleChangeUserRole}
+            onDeleteUser={handleAskDeleteUser}
           />
         </Box>
       );
@@ -1599,6 +1645,16 @@ export default function HomePage() {
           loading={deletingMeeting}
           onClose={handleCloseDeleteMeetingDialog}
           onConfirm={handleConfirmDeleteMeeting}
+        />
+
+        <ConfirmDeleteDialog
+          open={deleteAdminUserDialogOpen}
+          title="Eliminar usuario"
+          message="Vas a eliminar este usuario autorizado. Si vuelve a intentar ingresar, quedará nuevamente pendiente de aprobación."
+          itemLabel={adminUserToDelete?.email || ""}
+          loading={savingAdminUserId === adminUserToDelete?.id}
+          onClose={handleCloseDeleteAdminUserDialog}
+          onConfirm={handleConfirmDeleteAdminUser}
         />
 
         {detailContact && (

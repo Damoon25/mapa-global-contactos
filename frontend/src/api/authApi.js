@@ -164,3 +164,12 @@ export const updateAuthorizedUser = async (id, updates) => {
   if (error) throw error;
   return data;
 };
+
+export const deleteAuthorizedUser = async (id) => {
+  const { error } = await supabase
+    .from("usuarios_autorizados")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+};

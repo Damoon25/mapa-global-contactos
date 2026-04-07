@@ -15,6 +15,7 @@ import {
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 export default function AdminUsersPanel({
   users = [],
@@ -24,6 +25,7 @@ export default function AdminUsersPanel({
   onApproveUser,
   onToggleActive,
   onChangeRole,
+  onDeleteUser,
 }) {
   const pendingUsers = users.filter((user) => !user.activo);
   const activeUsers = users.filter((user) => user.activo);
@@ -159,6 +161,23 @@ export default function AdminUsersPanel({
               </Button>
             ) : null}
 
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteOutlineRoundedIcon />}
+              onClick={() => onDeleteUser?.(user)}
+              disabled={isSaving || isCurrentUser}
+              sx={{
+                borderRadius: "14px",
+                textTransform: "none",
+                fontWeight: 800,
+                py: 1,
+                fontSize: "0.84rem",
+              }}
+            >
+              Eliminar usuario
+            </Button>
+
             <Stack
               direction="row"
               spacing={1}
@@ -254,7 +273,7 @@ export default function AdminUsersPanel({
                       lineHeight: 1.35,
                     }}
                   >
-                    No podés cambiar tu propio estado.
+                    No podés cambiar ni eliminar tu propio usuario.
                   </Typography>
                 ) : null}
               </Box>
