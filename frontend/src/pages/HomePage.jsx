@@ -3,6 +3,7 @@ import SidePanel from "../components/layout/SidePanel";
 import FullScreenLoader from "../components/common/FullScreenLoader";
 import ImportResultsDialog from "../components/common/ImportResultsDialog";
 import AgendaPanel from "../components/panels/AgendaPanel";
+import DashboardPanel from "../components/panels/DashboardPanel";
 import AddMeetingDialog from "../components/panels/AddMeetingDialog";
 import UpcomingMeetingNotifier from "../components/panels/UpcomingMeetingNotifier";
 import {
@@ -897,57 +898,7 @@ export default function HomePage() {
     }
 
     if (panelView === "dashboard") {
-      return (
-        <Stack spacing={2}>
-          <Typography variant="h6" fontWeight={700}>
-            Dashboard
-          </Typography>
-
-          <Typography variant="body2" color="text.secondary">
-            Acá se muestran estadísticas generales sobre tus contactos.
-          </Typography>
-
-          <Stack spacing={1.5}>
-            <Card
-              sx={{
-                borderRadius: 3,
-                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
-              }}
-            >
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Total de contactos
-                </Typography>
-                <Typography variant="h4" fontWeight={800}>
-                  {contacts.length}
-                </Typography>
-              </CardContent>
-            </Card>
-
-            <Card
-              sx={{
-                borderRadius: 3,
-                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
-              }}
-            >
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Países visibles
-                </Typography>
-                <Typography variant="h4" fontWeight={800}>
-                  {
-                    new Set(
-                      filteredContacts
-                        .map((contact) => contact.paises?.nombre)
-                        .filter(Boolean),
-                    ).size
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Stack>
-      );
+      return <DashboardPanel contacts={contacts} meetings={meetings} />;
     }
 
     if (panelView === "admin" && isAdmin) {
