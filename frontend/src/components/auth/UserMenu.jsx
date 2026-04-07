@@ -49,13 +49,6 @@ export default function UserMenu({ user, profile, authorizedUser }) {
 
   const email = user?.email || profile?.email || "";
 
-  const accessLabel =
-    authorizedUser?.tipo_mapa === "argentina"
-      ? "Argentina"
-      : authorizedUser?.tipo_mapa === "publico"
-        ? "Público"
-        : "Global";
-
   const roleLabel =
     authorizedUser?.rol === "admin"
       ? "Admin"
@@ -175,20 +168,6 @@ export default function UserMenu({ user, profile, authorizedUser }) {
               </div>
             </div>
           </div>
-
-          <div
-            style={{
-              marginTop: "14px",
-              padding: "10px 12px",
-              borderRadius: "14px",
-              background: "#f8fafc",
-              fontSize: "13px",
-              color: "#334155",
-            }}
-          >
-            Acceso: <strong>{accessLabel}</strong>
-          </div>
-
           <div
             style={{
               marginTop: "10px",

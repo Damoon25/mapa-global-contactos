@@ -3191,6 +3191,175 @@ body,
   }
 }
 
+@media (max-width: 950px) and (orientation: landscape) {
+  .topbar {
+    left: 72px !important;
+    right: 12px !important;
+    top: 10px !important;
+    width: auto !important;
+    padding: 0 !important;
+  }
+
+  .topbar-toolbar {
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  .topbar-panel {
+    width: 100%;
+  }
+
+  .topbar-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+
+  .topbar-row {
+    width: 100%;
+  }
+
+  .topbar-search-row {
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .topbar-menu-btn {
+    width: 38px !important;
+    height: 38px !important;
+    display: inline-flex !important;
+  }
+
+  .search-box {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 8px 12px !important;
+    border-radius: 16px !important;
+  }
+
+  .search-box input {
+    font-size: 0.78rem !important;
+  }
+
+  .topbar-user-slot--mobile {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu {
+    width: 34px !important;
+    min-width: 34px !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu__trigger {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    justify-content: center !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu__trigger span {
+    display: none !important;
+  }
+
+  .topbar-user-slot--mobile .topbar-user-menu__trigger img {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .topbar-row--continents {
+    margin-top: 0 !important;
+  }
+
+  .continent-scroll {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
+    padding: 0 !important;
+  }
+
+  .continent-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .continent-scroll-track,
+  .continent-scroll .MuiStack-root {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    gap: 8px !important;
+  }
+
+  .continent-chip {
+    flex: 0 0 auto !important;
+    height: 30px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .continent-chip .MuiChip-label {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    white-space: nowrap !important;
+  }
+
+  .topbar-row--actions {
+    width: 100%;
+  }
+
+  .mobile-quick-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    padding: 0 !important;
+    scrollbar-width: none;
+  }
+
+  .mobile-quick-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-quick-action-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 12px !important;
+  }
+
+  .mobile-quick-action-btn .MuiSvgIcon-root {
+    font-size: 19px !important;
+  }
+
+  .mobile-recenter-floating,
+  .mobile-recenter-btn {
+    width: 42px !important;
+    height: 42px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+  }
+
+  .side-panel {
+    width: min(320px, 78vw) !important;
+  }
+}
+
 @media (min-width: 769px) {
   .mobile-quick-actions {
     display: none !important;
