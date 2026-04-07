@@ -80,7 +80,9 @@ export default function HomePage() {
   const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
   const [savingAdminUserId, setSavingAdminUserId] = useState(null);
   const [hasBootstrappedApp, setHasBootstrappedApp] = useState(false);
-  const isMobile = useMediaQuery("(max-width:768px)");
+  const isMobile = useMediaQuery(
+    "(max-width:768px) and (orientation: portrait)",
+  );
 
   const [contacts, setContacts] = useState([]);
   const [countries, setCountries] = useState([]);
